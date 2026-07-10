@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>145FC - Painel do Time</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=1.0.1">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-wrapper">
+                    <svg viewBox="0 0 100 100" class="team-logo">
+                        <!-- Shield Background -->
+                        <polygon points="50,5 90,20 90,65 50,95 10,65 10,20" fill="#111" stroke="#0055ff" stroke-width="4"/>
+                        <!-- Diagonal Stripes -->
+                        <path d="M 25 35 L 75 85" stroke="#222" stroke-width="8" opacity="0.3" />
+                        <path d="M 40 25 L 90 75" stroke="#222" stroke-width="8" opacity="0.3" />
+                        <!-- Team Name Texts -->
+                        <text x="50%" y="45%" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="22" fill="#fff" letter-spacing="1">145</text>
+                        <text x="50%" y="70%" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="20" fill="#0055ff" letter-spacing="1">FC</text>
+                    </svg>
+                </div>
+                <h2>145FC</h2>
+                <span class="badge">Painel Oficial</span>
+                <div class="sidebar-user-profile" id="sidebar-user-profile">
+                    <div class="user-avatar" id="sidebar-user-avatar"></div>
+                    <div>
+                        <div id="sidebar-user-name">Jogador</div>
+                        <div class="user-status">Conectado</div>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-link active" data-tab="dashboard">
+                    <i class="fa-solid fa-house"></i> <span>Dashboard</span>
+                </a>
+                <a href="#tactical" class="nav-link" data-tab="tactical">
+                    <i class="fa-solid fa-shield-halved"></i> <span>Escalação</span>
+                </a>
+                <a href="#board" class="nav-link" data-tab="board">
+                    <i class="fa-solid fa-chalkboard-user"></i> <span>Prancheta Tática</span>
+                </a>
+                <a href="#matches" class="nav-link" data-tab="matches">
+                    <i class="fa-solid fa-calendar-days"></i> <span>Jogos & Presença</span>
+                </a>
+                <a href="#training" class="nav-link" data-tab="training">
+                    <i class="fa-solid fa-dumbbell"></i> <span>Treinos & Aquecimento</span>
+                </a>
+                <a href="#nutrition" class="nav-link" data-tab="nutrition">
+                    <i class="fa-solid fa-apple-whole"></i> <span>Alimentação & Hidratação</span>
+                </a>
+                <a href="#stats" class="nav-link" data-tab="stats">
+                    <i class="fa-solid fa-chart-simple"></i> <span>Estatísticas</span>
+                </a>
+                <button class="btn btn-secondary btn-block" id="logout-btn" onclick="app.logout()" style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>&copy; 2026 145FC • Sem Custos</p>
+            </div>
+        </aside>
+
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <div class="mobile-brand">
+                <svg viewBox="0 0 100 100" class="team-logo-small">
+                    <polygon points="50,5 90,20 90,65 50,95 10,65 10,20" fill="#111" stroke="#0055ff" stroke-width="4"/>
+                    <text x="50%" y="45%" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="24" fill="#fff">145</text>
+                    <text x="50%" y="72%" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="20" fill="#0055ff">FC</text>
+                </svg>
+                <h1>145FC</h1>
+            </div>
+            <button id="menu-toggle" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- SECTION 1: DASHBOARD -->
+            <section id="dashboard" class="tab-content active">
+                <div class="section-header">
+                    <div>
+                        <h1>Visão Geral do 145FC</h1>
+                        <p class="subtitle">Acompanhe as novidades e o status do próximo confronto.</p>
+                    </div>
+                    <div class="current-date">
+                        <i class="fa-regular fa-calendar"></i> <span id="current-date-span">10 de Julho de 2026</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Next Match Card -->
+                    <div class="glass-card match-card-highlight">
+                        <div class="card-header">
+                            <span class="category-tag">Próximo Jogo</span>
+                            <span id="dash-match-status" class="status-indicator live">Confirmado</span>
+                        </div>
+                        <div class="match-vs-wrapper">
+                            <div class="team-vs text-right">
+                                <h3>145FC</h3>
+                                <small>Mandante</small>
+                            </div>
+                            <div class="vs-circle">VS</div>
+                            <div class="team-vs text-left">
+                                <h3 id="dash-match-opponent">Adversário</h3>
+                                <small>Visitante</small>
+                            </div>
+                        </div>
+                        <div class="match-details-list">
+                            <div class="detail-item">
+                                <i class="fa-solid fa-calendar-day"></i>
+                                <span id="dash-match-date">Sábado, 12 de Julho</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span id="dash-match-time">18:00</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span id="dash-match-location">Arena Gol de Placa</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fa-solid fa-shirt"></i>
+                                <span>Uniforme: <strong id="dash-match-jersey">Preto/Verde</strong></span>
+                            </div>
+                        </div>
+                        <div class="rsvp-summary-bar">
+                            <div class="rsvp-metric">
+                                <span class="num green" id="dash-rsvp-yes">0</span>
+                                <span class="label">Confirmados</span>
+                            </div>
+                            <div class="rsvp-metric">
+                                <span class="num yellow" id="dash-rsvp-maybe">0</span>
+                                <span class="label">Dúvida</span>
+                            </div>
+                            <div class="rsvp-metric">
+                                <span class="num red" id="dash-rsvp-no">0</span>
+                                <span class="label">Ausentes</span>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="app.switchTab('matches')">
+                                <i class="fa-solid fa-user-check"></i> Confirmar Presença
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Lineup Preview -->
+                    <div class="glass-card lineup-preview-card">
+                        <div class="card-header">
+                            <span class="category-tag">Esboço Tático</span>
+                            <span class="tactical-formation-badge" id="dash-lineup-formation">4-3-3</span>
+                        </div>
+                        <div class="mini-field-container">
+                            <div class="mini-field">
+                                <!-- Mini football field lines -->
+                                <div class="mini-penalty-area-top"></div>
+                                <div class="mini-center-circle"></div>
+                                <div class="mini-penalty-area-bottom"></div>
+                                <!-- Players will be dynamically injected here -->
+                                <div id="mini-field-players"></div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="app.switchTab('tactical')">
+                                <i class="fa-solid fa-arrow-right-long"></i> Ajustar Escalação
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Nutri Hydration Card -->
+                    <div class="glass-card info-summary-card">
+                        <div class="card-header">
+                            <span class="category-tag">Dica de Hidratação</span>
+                            <i class="fa-solid fa-droplet text-blue"></i>
+                        </div>
+                        <div class="quick-info-body">
+                            <h3>Mantenha a performance!</h3>
+                            <p>Uma perda de apenas 2% de peso em água pode reduzir em até 20% sua capacidade de corrida durante o jogo.</p>
+                            <div class="calculator-shortcut">
+                                <p>Calcule seu consumo ideal para o jogo:</p>
+                                <button class="btn btn-accent btn-sm" onclick="app.switchTab('nutrition')">
+                                    <i class="fa-solid fa-calculator"></i> Calcular Hidratação
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Scorer Card -->
+                    <div class="glass-card stat-summary-card">
+                        <div class="card-header">
+                            <span class="category-tag">Destaques</span>
+                            <i class="fa-solid fa-award text-yellow"></i>
+                        </div>
+                        <div class="quick-stats-body">
+                            <div class="stat-highlight-item">
+                                <div class="stat-icon"><i class="fa-solid fa-futbol text-green"></i></div>
+                                <div class="stat-info">
+                                    <small>Artilheiro</small>
+                                    <h4 id="dash-top-scorer">Nenhum gol</h4>
+                                </div>
+                            </div>
+                            <div class="stat-highlight-item">
+                                <div class="stat-icon"><i class="fa-solid fa-hands-helping text-blue"></i></div>
+                                <div class="stat-info">
+                                    <small>Garçom (Assitências)</small>
+                                    <h4 id="dash-top-assister">Nenhuma assistência</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: TACTICAL LINEUP -->
+            <section id="tactical" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h1>Escalação & Quadro Tático</h1>
+                        <p class="subtitle">Defina o esquema de jogo do 145FC e organize os titulares.</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="select-wrapper">
+                            <label for="formation-select">Formação:</label>
+                            <select id="formation-select" class="custom-select">
+                                <option value="4-3-3">4-3-3 Clássico</option>
+                                <option value="4-4-2">4-4-2 Duas Linhas</option>
+                                <option value="3-5-2">3-5-2 Ofensivo</option>
+                                <option value="5-3-2">5-3-2 Defensivo</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-accent" id="share-lineup-btn">
+                            <i class="fa-solid fa-share-nodes"></i> Copiar Escalação
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tactical-layout-grid">
+                    <!-- The Interactive Pitch -->
+                    <div class="glass-card pitch-card">
+                        <div class="pitch-container">
+                            <div class="football-pitch" id="football-pitch">
+                                <!-- Pitch lines -->
+                                <div class="pitch-penalty-area-top"></div>
+                                <div class="pitch-goal-area-top"></div>
+                                <div class="pitch-center-line"></div>
+                                <div class="pitch-center-circle"></div>
+                                <div class="pitch-penalty-area-bottom"></div>
+                                <div class="pitch-goal-area-bottom"></div>
+                                
+                                <!-- 11 Players nodes dynamically placed -->
+                                <div id="pitch-players-layer"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Squad Management Panel -->
+                    <div class="glass-card squad-panel">
+                        <div class="panel-tabs">
+                            <button class="panel-tab-btn active" data-panel-tab="players-list">Jogadores</button>
+                            <button class="panel-tab-btn" data-panel-tab="add-player">Novo Jogador</button>
+                        </div>
+
+                        <!-- TAB: Players List -->
+                        <div class="panel-tab-content active" id="panel-players-list">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="player-search" placeholder="Buscar jogador...">
+                            </div>
+                            
+                            <div class="player-scroller">
+                                <h3>Selecione um jogador no campo para substituí-lo pelos atletas abaixo:</h3>
+                                <div class="players-grid" id="available-players-pool">
+                                    <!-- Dynamic list of players -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: Add Player Form -->
+                        <div class="panel-tab-content" id="panel-add-player">
+                            <form id="add-player-form" class="styled-form">
+                                <div class="form-group">
+                                    <label for="new-player-name">Nome do Jogador</label>
+                                    <input type="text" id="new-player-name" required placeholder="Ex: Carlinhos">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-player-number">Número da Camisa</label>
+                                    <input type="number" id="new-player-number" required min="1" max="99" placeholder="Ex: 10">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-player-position">Posição Favorita</label>
+                                    <select id="new-player-position" class="custom-select">
+                                        <option value="Goleiro">Goleiro (GK)</option>
+                                        <option value="Zagueiro">Zagueiro (DF)</option>
+                                        <option value="Lateral">Lateral (L/R)</option>
+                                        <option value="Meio-Campo">Meio-Campo (MC)</option>
+                                        <option value="Atacante">Atacante (AT)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-player-photo">Foto de Perfil</label>
+                                    <input type="file" id="new-player-photo" accept="image/*" class="custom-file-input">
+                                    <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 0.25rem;">Foto quadrada recomendada. Aparecerá no campo tático.</small>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    <i class="fa-solid fa-user-plus"></i> Cadastrar e Salvar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: MATCHES & RSVP -->
+            <section id="matches" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h1>Jogos & Lista de Presença</h1>
+                        <p class="subtitle">Cadastre partidas e confirme quem vai pro jogo.</p>
+                    </div>
+                    <button class="btn btn-primary" id="open-add-match-btn">
+                        <i class="fa-solid fa-plus"></i> Novo Jogo
+                    </button>
+                </div>
+
+                <!-- Match Add Modal / Form (Collapsible/Hidden by default) -->
+                <div class="glass-card collapsible-card hidden" id="add-match-card">
+                    <div class="card-header">
+                        <h3>Cadastrar Nova Partida</h3>
+                        <button class="btn-close" id="close-add-match-btn"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <form id="add-match-form" class="styled-form-grid">
+                        <div class="form-group">
+                            <label for="match-opponent">Adversário</label>
+                            <input type="text" id="match-opponent" required placeholder="Ex: Ajax da Vila">
+                        </div>
+                        <div class="form-group">
+                            <label for="match-date">Data</label>
+                            <input type="date" id="match-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="match-time">Horário</label>
+                            <input type="time" id="match-time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="match-location">Local / Campo</label>
+                            <input type="text" id="match-location" required placeholder="Ex: Arena Gol de Placa">
+                        </div>
+                        <div class="form-group">
+                            <label for="match-maps-link">Link do Google Maps (Opcional)</label>
+                            <input type="url" id="match-maps-link" placeholder="Ex: https://maps.google.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label for="match-jersey">Cor do Uniforme</label>
+                            <input type="text" id="match-jersey" placeholder="Ex: Preto/Verde" value="Preto/Verde">
+                        </div>
+                        <div class="form-actions-full">
+                            <button type="submit" class="btn btn-primary">Salvar Jogo</button>
+                            <button type="button" class="btn btn-secondary" id="cancel-match-btn">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="matches-layout">
+                    <!-- Matches List -->
+                    <div class="matches-list-container">
+                        <h2>Próximos Confrontos</h2>
+                        <div id="matches-cards-container" class="matches-cards-grid">
+                            <!-- Match cards will be injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- RSVP Detailed Selector Panel -->
+                    <div class="glass-card rsvp-detail-panel hidden" id="rsvp-detail-panel">
+                        <div class="card-header">
+                            <h3>Presenças Confirmadas</h3>
+                            <button class="btn btn-accent btn-sm" id="share-rsvp-btn">
+                                <i class="fa-solid fa-copy"></i> WhatsApp
+                            </button>
+                        </div>
+                        
+                        <div class="rsvp-lists-wrapper">
+                            <div class="rsvp-sublist">
+                                <h4 class="green"><i class="fa-regular fa-circle-check"></i> Vão ao Jogo (<span id="rsvp-yes-count">0</span>)</h4>
+                                <ul id="rsvp-yes-list"></ul>
+                            </div>
+                            <div class="rsvp-sublist">
+                                <h4 class="yellow"><i class="fa-regular fa-circle-question"></i> Dúvida (<span id="rsvp-maybe-count">0</span>)</h4>
+                                <ul id="rsvp-maybe-list"></ul>
+                            </div>
+                            <div class="rsvp-sublist">
+                                <h4 class="red"><i class="fa-regular fa-circle-xmark"></i> Não Vão (<span id="rsvp-no-count">0</span>)</h4>
+                                <ul id="rsvp-no-list"></ul>
+                            </div>
+                        </div>
+
+                        <!-- Player RSVP Management -->
+                        <div class="rsvp-player-assigner">
+                            <h4>Alterar presença de um jogador:</h4>
+                            <div class="assigner-controls">
+                                <select id="rsvp-player-select" class="custom-select">
+                                    <!-- Player options dynamically injected -->
+                                </select>
+                                <div class="assigner-buttons">
+                                    <button class="btn btn-success" onclick="app.updatePlayerRsvp('yes')" title="Confirmar"><i class="fa-solid fa-check"></i> VAI</button>
+                                    <button class="btn btn-warning" onclick="app.updatePlayerRsvp('maybe')" title="Dúvida"><i class="fa-solid fa-question"></i> TALVEZ</button>
+                                    <button class="btn btn-danger" onclick="app.updatePlayerRsvp('no')" title="Ausente"><i class="fa-solid fa-xmark"></i> NÃO</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: TRAINING & WARM-UP -->
+            <section id="training" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h1>Treinos & Aquecimento</h1>
+                        <p class="subtitle">Instruções de preparação e aquecimento físico voltados para cada posição.</p>
+                    </div>
+                </div>
+
+                <div class="training-layout">
+                    <!-- Position selector tabs -->
+                    <div class="position-tabs">
+                        <button class="position-tab-btn active" data-pos-tab="gk">
+                            <i class="fa-solid fa-hands-reach"></i> Goleiro
+                        </button>
+                        <button class="position-tab-btn" data-pos-tab="df">
+                            <i class="fa-solid fa-shield-halved"></i> Defesa
+                        </button>
+                        <button class="position-tab-btn" data-pos-tab="mc">
+                            <i class="fa-solid fa-arrows-spin"></i> Meio-Campo
+                        </button>
+                        <button class="position-tab-btn" data-pos-tab="at">
+                            <i class="fa-solid fa-jet-fighter"></i> Ataque
+                        </button>
+                    </div>
+
+                    <!-- Training Details Card -->
+                    <div class="glass-card training-details-card">
+                        <div class="training-tab-content active" id="training-gk">
+                            <div class="training-grid">
+                                <div class="training-info-block">
+                                    <h2>Foco de Treino - Goleiros</h2>
+                                    <p class="section-desc">Tempo de reação, posicionamento de baliza, flexibilidade e impulsão lateral.</p>
+                                    
+                                    <h3>Exercícios Recomendados:</h3>
+                                    <ul class="exercise-list">
+                                        <li><strong>Deslocamento Lateral Rápido:</strong> 4 séries de 30 segundos tocando nos cones laterais de 5m.</li>
+                                        <li><strong>Pega de Bola Alta:</strong> Exercício com cruzamentos na área (15 repetições).</li>
+                                        <li><strong>Queda Lateral Controlada:</strong> Caídas com bola lançada rasteira à meia distância (12 para cada lado).</li>
+                                    </ul>
+                                </div>
+
+                                <div class="timer-block">
+                                    <div class="timer-card">
+                                        <h3>Aquecimento Pré-Jogo</h3>
+                                        <p>Faça a ativação de articulações e reflexos.</p>
+                                        <div class="timer-display" id="timer-display-gk">10:00</div>
+                                        <div class="timer-controls">
+                                            <button class="btn btn-success" onclick="app.toggleTimer('gk')"><i class="fa-solid fa-play" id="timer-icon-gk"></i> Iniciar</button>
+                                            <button class="btn btn-secondary" onclick="app.resetTimer('gk', 600)"><i class="fa-solid fa-arrow-rotate-left"></i> Resetar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-tab-content" id="training-df">
+                            <div class="training-grid">
+                                <div class="training-info-block">
+                                    <h2>Foco de Treino - Defensores (Zagueiros & Laterais)</h2>
+                                    <p class="section-desc">Poder de cabeceio, antecipação, passes de saída e posicionamento de cobertura.</p>
+                                    
+                                    <h3>Exercícios Recomendados:</h3>
+                                    <ul class="exercise-list">
+                                        <li><strong>Corrida de Costas e Recuperação:</strong> Pique de costas 5m, giro de quadril e corrida de 10m de frente. (5 repetições)</li>
+                                        <li><strong>Duelos Aéreos:</strong> Saltar simulando cabeceio defensivo contra atacante na marcação da área. (12 saltos)</li>
+                                        <li><strong>Passe Firme & Saída de Jogo:</strong> Tabelas rápidas de 1-2 toques a 10 metros de distância com o meio-campo.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="timer-block">
+                                    <div class="timer-card">
+                                        <h3>Aquecimento Pré-Jogo</h3>
+                                        <p>Mobilidade de quadril e piques curtos.</p>
+                                        <div class="timer-display" id="timer-display-df">08:00</div>
+                                        <div class="timer-controls">
+                                            <button class="btn btn-success" onclick="app.toggleTimer('df')"><i class="fa-solid fa-play" id="timer-icon-df"></i> Iniciar</button>
+                                            <button class="btn btn-secondary" onclick="app.resetTimer('df', 480)"><i class="fa-solid fa-arrow-rotate-left"></i> Resetar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-tab-content" id="training-mc">
+                            <div class="training-grid">
+                                <div class="training-info-block">
+                                    <h2>Foco de Treino - Meio-Campistas</h2>
+                                    <p class="section-desc">Visão de jogo, controle orientado, transição rápida e resistência aeróbica.</p>
+                                    
+                                    <h3>Exercícios Recomendados:</h3>
+                                    <ul class="exercise-list">
+                                        <li><strong>Rondo (Bobinho):</strong> Espaço reduzido 4x1 ou 5x2 focando em posse rápida de 1 toque. (10 min)</li>
+                                        <li><strong>Controle e Giro 180°:</strong> Receber a bola de costas para o gol fictício, girar em um toque e fazer o passe longo.</li>
+                                        <li><strong>Piques Intermitentes:</strong> Simulações de transição de alta intensidade campo a campo.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="timer-block">
+                                    <div class="timer-card">
+                                        <h3>Aquecimento Pré-Jogo</h3>
+                                        <p>Ativação neuromuscular e posse rápida.</p>
+                                        <div class="timer-display" id="timer-display-mc">08:00</div>
+                                        <div class="timer-controls">
+                                            <button class="btn btn-success" onclick="app.toggleTimer('mc')"><i class="fa-solid fa-play" id="timer-icon-mc"></i> Iniciar</button>
+                                            <button class="btn btn-secondary" onclick="app.resetTimer('mc', 480)"><i class="fa-solid fa-arrow-rotate-left"></i> Resetar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-tab-content" id="training-at">
+                            <div class="training-grid">
+                                <div class="training-info-block">
+                                    <h2>Foco de Treino - Atacantes & Pontas</h2>
+                                    <p class="section-desc">Finalização precisa, aceleração explosiva, drible curto de 1 contra 1 e agressividade.</p>
+                                    
+                                    <h3>Exercícios Recomendados:</h3>
+                                    <ul class="exercise-list">
+                                        <li><strong>Chute Rápido Pós-Giro:</strong> Chutes de primeira na entrada da área simulando pivô. (15 finalizações)</li>
+                                        <li><strong>Piques Explosivos de 20m:</strong> Tiros de corrida curta saindo de diferentes posições. (6 tiros)</li>
+                                        <li><strong>Cruzamento e Finalização:</strong> Pontas cruzam da linha de fundo e centroavantes atacam o primeiro e segundo pau.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="timer-block">
+                                    <div class="timer-card">
+                                        <h3>Aquecimento Pré-Jogo</h3>
+                                        <p>Aceleração e chutes ao gol.</p>
+                                        <div class="timer-display" id="timer-display-at">06:00</div>
+                                        <div class="timer-controls">
+                                            <button class="btn btn-success" onclick="app.toggleTimer('at')"><i class="fa-solid fa-play" id="timer-icon-at"></i> Iniciar</button>
+                                            <button class="btn btn-secondary" onclick="app.resetTimer('at', 360)"><i class="fa-solid fa-arrow-rotate-left"></i> Resetar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: NUTRITION & HYDRATION -->
+            <section id="nutrition" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h1>Alimentação & Hidratação</h1>
+                        <p class="subtitle">Guia de nutrição esportiva prática e calculadora de hidratação individual.</p>
+                    </div>
+                </div>
+
+                <div class="nutrition-layout-grid">
+                    <!-- Nutrition Guides -->
+                    <div class="glass-card nutrition-guide-card">
+                        <h2>Linha do Tempo Alimentar</h2>
+                        <p class="section-desc">Como se alimentar para chegar ao jogo com 100% de energia e sem peso no estômago.</p>
+                        
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-badge"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                                <div class="timeline-panel">
+                                    <span class="timeline-time"><i class="fa-regular fa-clock"></i> 24h Antes</span>
+                                    <h4>Carbo Loading</h4>
+                                    <p>Aumente a ingestão de carboidratos complexos (arroz, macarrão, batata-doce). Evite carnes muito gordurosas e frituras que retardam a digestão.</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-badge"><i class="fa-solid fa-bowl-rice"></i></div>
+                                <div class="timeline-panel">
+                                    <span class="timeline-time"><i class="fa-regular fa-clock"></i> 3h a 4h Antes</span>
+                                    <h4>Refeição Principal</h4>
+                                    <p>Prato de fácil digestão: peito de frango grelhado, purê de batata ou arroz branco. Evite excesso de fibras (feijão, saladas muito folhosas) para não dar desconforto.</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-badge"><i class="fa-solid fa-banana"></i></div>
+                                <div class="timeline-panel">
+                                    <span class="timeline-time"><i class="fa-regular fa-clock"></i> 1h a 1h30 Antes</span>
+                                    <h4>Lanche Rápido de Ativação</h4>
+                                    <p>Fruta leve (banana com mel) ou uma fatia de pão de forma com geleia de frutas. Bebida isotônica em pequenos goles.</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-badge"><i class="fa-solid fa-battery-half"></i></div>
+                                <div class="timeline-panel">
+                                    <span class="timeline-time"><i class="fa-solid fa-circle-check"></i> Pós-Jogo</span>
+                                    <h4>Janela de Recuperação</h4>
+                                    <p>Nas primeiras 2 horas: refeição rica em proteínas para reconstrução muscular (frango, ovos, peixe) combinada com carboidratos para repor o glicogênio gasto.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hydration Calculator -->
+                    <div class="glass-card hydration-calc-card">
+                        <h2><i class="fa-solid fa-droplet text-blue"></i> Calculadora de Hidratação Esportiva</h2>
+                        <p class="section-desc">Insira seus dados para obter o plano personalizado de ingestão de água para o dia do jogo.</p>
+                        
+                        <form id="hydration-form" class="styled-form">
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label for="calc-weight">Seu Peso (kg)</label>
+                                    <input type="number" id="calc-weight" min="30" max="150" value="75" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="calc-intensity">Intensidade do Jogo</label>
+                                    <select id="calc-intensity" class="custom-select">
+                                        <option value="moderate">Moderado (reserva / meio tempo)</option>
+                                        <option value="high" selected>Alta (titular correndo o jogo todo)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-calculator"></i> Calcular Plano
+                            </button>
+                        </form>
+
+                        <div class="calculator-results hidden" id="hydration-results">
+                            <h3>Seu Plano de Hidratação:</h3>
+                            <div class="results-grid">
+                                <div class="result-card">
+                                    <div class="result-time">Pré-Jogo <small>(2h antes)</small></div>
+                                    <div class="result-value" id="res-pre">--</div>
+                                    <p>Beba devagar para garantir a hidratação das células sem pesar.</p>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-time">Durante <small>(a cada 15 min)</small></div>
+                                    <div class="result-value" id="res-during">--</div>
+                                    <p>Pequenos goles nas pausas. Ajuda a prevenir cãibras de esforço.</p>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-time">Pós-Jogo <small>(recuperação)</small></div>
+                                    <div class="result-value" id="res-post">--</div>
+                                    <p>Consuma nas primeiras 2h após o apito final para reidratar de vez.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: STATS & LEADERBOARD -->
+            <section id="stats" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h1>Estatísticas do Time</h1>
+                        <p class="subtitle">Artilharia, passes para gol e prêmios de Melhor do Jogo acumulados.</p>
+                    </div>
+                    <button class="btn btn-primary" id="open-add-stat-btn">
+                        <i class="fa-solid fa-plus"></i> Registrar Scout
+                    </button>
+                </div>
+
+                <!-- Collapsible Scout Entry Form -->
+                <div class="glass-card collapsible-card hidden" id="add-stat-card">
+                    <div class="card-header">
+                        <h3>Registrar Ações de um Jogo</h3>
+                        <button class="btn-close" id="close-add-stat-btn"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <form id="add-stat-form" class="styled-form-grid">
+                        <div class="form-group">
+                            <label for="stat-player-select">Selecione o Jogador</label>
+                            <select id="stat-player-select" class="custom-select" required>
+                                <!-- Player options dynamically injected -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-type">Tipo de Estatística</label>
+                            <select id="stat-type" class="custom-select" required>
+                                <option value="goal">Marcou Gol ⚽</option>
+                                <option value="assist">Deu Assistência 🤝</option>
+                                <option value="motm">Melhor do Jogo 🏆</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="stat-count">Quantidade</label>
+                            <input type="number" id="stat-count" min="1" max="10" value="1" required>
+                        </div>
+                        <div class="form-actions-full">
+                            <button type="submit" class="btn btn-primary">Registrar e Atualizar</button>
+                            <button type="button" class="btn btn-secondary" id="cancel-stat-btn">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="stats-layout-grid">
+                    <!-- Top Scorers (Artilharia) Table -->
+                    <div class="glass-card stats-table-card">
+                        <h2><i class="fa-solid fa-futbol text-green"></i> Tabela de Artilheiros</h2>
+                        <div class="table-responsive">
+                            <table class="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th width="80px">Pos.</th>
+                                        <th>Jogador</th>
+                                        <th width="100px">Camisa</th>
+                                        <th width="120px" class="text-center">Gols ⚽</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="artilharia-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Assists Table -->
+                    <div class="glass-card stats-table-card">
+                        <h2><i class="fa-solid fa-hands-helping text-blue"></i> Líderes de Assistências</h2>
+                        <div class="table-responsive">
+                            <table class="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th width="80px">Pos.</th>
+                                        <th>Jogador</th>
+                                        <th width="100px">Camisa</th>
+                                        <th width="120px" class="text-center">Assistências 🤝</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assistencias-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- MOTM Table -->
+                    <div class="glass-card stats-table-card full-width">
+                        <h2><i class="fa-solid fa-award text-yellow"></i> Melhor do Jogo (MOTM)</h2>
+                        <div class="table-responsive">
+                            <table class="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th width="80px">Pos.</th>
+                                        <th>Jogador</th>
+                                        <th width="100px">Camisa</th>
+                                        <th width="150px" class="text-center">Prêmios 🏆</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="motm-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 7: TACTICAL CHALKBOARD -->
+            <section id="board" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h1>Prancheta do Treinador</h1>
+                        <p class="subtitle">Arraste os jogadores livremente e desenhe jogadas táticas na tela.</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="select-wrapper">
+                            <label for="board-formation-select">Formação Inicial:</label>
+                            <select id="board-formation-select" class="custom-select">
+                                <option value="4-3-3">4-3-3 Clássico</option>
+                                <option value="4-4-2">4-4-2 Duas Linhas</option>
+                                <option value="3-5-2">3-5-2 Ofensivo</option>
+                                <option value="5-3-2">5-3-2 Defensivo</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" id="toggle-opponents-btn">
+                            <i class="fa-solid fa-eye-slash"></i> Oponentes
+                        </button>
+                        <button class="btn btn-danger" id="clear-board-drawings-btn">
+                            <i class="fa-solid fa-eraser"></i> Limpar Desenho
+                        </button>
+                        <button class="btn btn-accent" id="reset-board-players-btn">
+                            <i class="fa-solid fa-rotate-left"></i> Resetar Posições
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chalkboard-layout-grid">
+                    <!-- The Interactive Board Canvas & Pitch -->
+                    <div class="glass-card chalkboard-card">
+                        <div class="chalkboard-controls-bar">
+                            <div class="color-palette">
+                                <span class="color-swatch active" data-color="#0055ff" style="background-color: #0055ff;" title="Azul Royal"></span>
+                                <span class="color-swatch" data-color="#38bdf8" style="background-color: #38bdf8;" title="Azul Celeste"></span>
+                                <span class="color-swatch" data-color="#f59e0b" style="background-color: #f59e0b;" title="Laranja"></span>
+                                <span class="color-swatch" data-color="#ef4444" style="background-color: #ef4444;" title="Vermelho"></span>
+                                <span class="color-swatch" data-color="#ffffff" style="background-color: #ffffff;" title="Branco"></span>
+                            </div>
+                            <div class="pen-size-selector">
+                                <label for="board-pen-size">Espessura:</label>
+                                <input type="range" id="board-pen-size" min="2" max="10" value="4" class="custom-range">
+                            </div>
+                            <div class="board-mode-status">
+                                <span class="badge" id="board-action-mode"><i class="fa-solid fa-pencil"></i> Desenho + Movimento</span>
+                            </div>
+                        </div>
+
+                        <div class="board-pitch-container">
+                            <div class="football-pitch chalkboard-pitch" id="chalkboard-pitch">
+                                <!-- Pitch lines -->
+                                <div class="pitch-penalty-area-top"></div>
+                                <div class="pitch-goal-area-top"></div>
+                                <div class="pitch-center-line"></div>
+                                <div class="pitch-center-circle"></div>
+                                <div class="pitch-penalty-area-bottom"></div>
+                                <div class="pitch-goal-area-bottom"></div>
+                                
+                                <!-- Canvas for drawing -->
+                                <canvas id="chalkboard-canvas"></canvas>
+
+                                <!-- Player Tokens Layer -->
+                                <div id="board-home-players-layer"></div>
+                                <div id="board-away-players-layer"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blackboard side instructions -->
+                    <div class="glass-card board-instructions-card">
+                        <h2>Como Usar a Prancheta</h2>
+                        <p class="section-desc">Passe as instruções táticas de forma visual e intuitiva.</p>
+                        <ul class="exercise-list">
+                            <li><strong>Movimentar Jogadores:</strong> Clique/toque e arraste os tokens de jogadores (Verdes = 145FC, Vermelhos = Adversário) para qualquer lugar.</li>
+                            <li><strong>Desenhar no Campo:</strong> Clique e arraste o dedo/mouse no gramado de fundo para fazer marcações táticas.</li>
+                            <li><strong>Gizes de Cores:</strong> Selecione as cores acima (verde, amarelo, laranja, vermelho, branco) para separar fases de jogo.</li>
+                            <li><strong>Exibir Oponentes:</strong> Ative/desative a exibição dos tokens vermelhos usando o botão "Oponentes".</li>
+                        </ul>
+                        <div class="tactical-tips">
+                            <h3>💡 Dica do Treinador:</h3>
+                            <p>Configure a formação inicial e use os desenhos de cores diferentes para detalhar passes (verde), movimentações de corrida (amarelo) e posicionamento defensivo do adversário (vermelho).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Alert / Toast Toast Notification -->
+    <div id="toast" class="toast-notification"></div>
+
+    <!-- LOGIN & REGISTRATION OVERLAY -->
+    <div id="login-container" class="login-overlay hidden">
+        <div class="glass-card login-card">
+            <div class="login-logo-wrapper">
+                <svg viewBox="0 0 100 100" class="team-logo">
+                    <polygon points="50,5 90,20 90,65 50,95 10,65 10,20" fill="#111" stroke="#0055ff" stroke-width="4"/>
+                    <text x="50%" y="45%" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="22" fill="#fff" letter-spacing="1">145</text>
+                    <text x="50%" y="70%" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="900" font-size="20" fill="#0055ff" letter-spacing="1">FC</text>
+                </svg>
+            </div>
+            <h2 id="login-title">Acesso ao Painel 145FC</h2>
+            <p class="subtitle" id="login-subtitle">Faça login para gerenciar o time</p>
+            
+            <form id="login-form" class="styled-form">
+                <div class="form-group">
+                    <label for="login-username">Usuário</label>
+                    <input type="text" id="login-username" required placeholder="Digite seu usuário">
+                </div>
+                <div class="form-group" id="password-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required placeholder="Digite sua senha">
+                </div>
+                
+                <!-- Registration-only fields -->
+                <div id="register-only-fields" class="hidden">
+                    <div class="form-group">
+                        <label for="register-number">Número da Camisa</label>
+                        <input type="number" id="register-number" min="1" max="99" placeholder="Ex: 10">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-position">Posição Favorita</label>
+                        <select id="register-position" class="custom-select">
+                            <option value="Goleiro">Goleiro (GK)</option>
+                            <option value="Zagueiro">Zagueiro (DF)</option>
+                            <option value="Lateral">Lateral (L/R)</option>
+                            <option value="Meio-Campo" selected>Meio-Campo (MC)</option>
+                            <option value="Atacante">Atacante (AT)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-photo">Foto de Perfil</label>
+                        <input type="file" id="register-photo" accept="image/*" class="custom-file-input">
+                        <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 0.25rem;">Foto quadrada recomendada. Aparecerá no campo tático.</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="btn-login-submit" style="margin-top: 1.25rem;">
+                    <i class="fa-solid fa-right-to-bracket"></i> <span id="login-btn-text">Entrar</span>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <a href="#" id="toggle-register-link">Não tem conta? Cadastre-se aqui</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=1.0.1"></script>
+</body>
+</html>
