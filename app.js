@@ -354,6 +354,38 @@ class App145FC {
         reader.readAsDataURL(file);
     }
 
+    compressMatchImage(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                
+                const maxW = 600;
+                const maxH = 450;
+                let w = img.width;
+                let h = img.height;
+                
+                if (w > maxW) {
+                    h = Math.round((h * maxW) / w);
+                    w = maxW;
+                }
+                if (h > maxH) {
+                    w = Math.round((w * maxH) / h);
+                    h = maxH;
+                }
+                
+                canvas.width = w;
+                canvas.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                callback(canvas.toDataURL("image/jpeg", 0.7));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     saveMatches() {
         localStorage.setItem("145fc_matches", JSON.stringify(this.matches));
     }
@@ -555,6 +587,30 @@ class App145FC {
         document.getElementById("share-rsvp-btn").addEventListener("click", () => {
             this.copyRsvpToClipboard();
         });
+
+        // Trigger de upload de foto do jogo
+        const matchPhotoPreview = document.getElementById("match-photo-preview");
+        const matchPhotoInput = document.getElementById("match-photo-input");
+        if (matchPhotoPreview && matchPhotoInput) {
+            matchPhotoPreview.addEventListener("click", () => {
+                matchPhotoInput.click();
+            });
+
+            matchPhotoInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    this.compressMatchImage(e.target.files[0], (compressedData) => {
+                        const match = this.matches.find(m => m.id === this.activeMatchId);
+                        if (match) {
+                            match.photo = compressedData;
+                            this.saveMatches();
+                            this.renderMatchesList();
+                            this.renderRsvpPanel();
+                            this.showToast("Foto do jogo atualizada!");
+                        }
+                    });
+                }
+            });
+        }
 
         // Treinos: Navegação por posição
         document.querySelectorAll(".position-tab-btn").forEach(btn => {
@@ -1174,7 +1230,7 @@ class App145FC {
 
             card.innerHTML = `
                 <div class="match-info-main">
-                    <h3>145FC vs ${match.opponent}</h3>
+                    <h3>145FC vs ${match.opponent} ${match.photo ? '<i class="fa-regular fa-image" style="color:var(--primary-color); margin-left:0.25rem;" title="Possui foto do jogo"></i>' : ''}</h3>
                     <span>Data: ${dateFormatted} às ${match.time}</span>
                 </div>
                 <div class="match-info-details">
@@ -1244,6 +1300,29 @@ class App145FC {
         document.getElementById("rsvp-yes-count").innerText = yes;
         document.getElementById("rsvp-maybe-count").innerText = maybe;
         document.getElementById("rsvp-no-count").innerText = no;
+
+        // Renderiza a foto do jogo no painel lateral
+        const photoPreview = document.getElementById("match-photo-preview");
+        if (photoPreview) {
+            if (match.photo) {
+                photoPreview.style.backgroundImage = `url(${match.photo})`;
+                photoPreview.style.borderColor = "var(--primary-color)";
+                photoPreview.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.65); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.5rem; border-radius:6px; opacity:0; transition:opacity 0.2s; cursor:pointer;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                        <i class="fa-solid fa-camera" style="font-size: 1.5rem; color:#fff;"></i>
+                        <span style="font-size:0.75rem; color:#fff; font-weight:600;">Alterar Foto do Jogo</span>
+                    </div>
+                `;
+            } else {
+                photoPreview.style.backgroundImage = "none";
+                photoPreview.style.borderColor = "var(--border-color)";
+                photoPreview.innerHTML = `
+                    <i class="fa-regular fa-image" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <span style="font-size: 0.8rem; opacity: 0.8;">Nenhuma foto cadastrada</span>
+                    <span style="font-size: 0.7rem; opacity: 0.5;">Clique para fazer upload</span>
+                `;
+            }
+        }
     }
 
     updatePlayerRsvp(status) {
