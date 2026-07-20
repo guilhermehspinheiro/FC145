@@ -96,11 +96,11 @@ class App145FC {
         this.boardPenSize = 4;
     }
 
-    init() {
-        // Carrega dados do LocalStorage ou usa Defaults
-        this.loadData();
+    async init() {
+        // Carrega dados do Firestore (ou defaults se for a primeira vez)
+        await this.loadDataFromFirestore();
         
-        // Verifica Autenticação
+        // Verifica Autenticação (sessão local)
         this.checkAuth();
         
         // Define o primeiro jogo como ativo por padrão
@@ -119,36 +119,144 @@ class App145FC {
 
         // Inicializa a Prancheta
         this.initChalkboard();
+
+        // Inicia escuta em tempo real do Firestore
+        this.setupRealtimeListeners();
     }
 
-    // --- CARGA E PERSISTÊNCIA DE DADOS ---
-    loadData() {
-        const savedPlayers = localStorage.getItem("145fc_players");
-        const savedMatches = localStorage.getItem("145fc_matches");
-        const savedStats = localStorage.getItem("145fc_stats");
-        const savedFormation = localStorage.getItem("145fc_tactical_formation");
+    // --- CARGA E PERSISTÊNCIA DE DADOS (FIREBASE FIRESTORE) ---
+    async loadDataFromFirestore() {
+        try {
+            // Tenta carregar do Firestore
+            const playersDoc = await db.collection("shared").doc("players").get();
+            const matchesDoc = await db.collection("shared").doc("matches").get();
+            const statsDoc = await db.collection("shared").doc("stats").get();
+            const formationDoc = await db.collection("shared").doc("formation").get();
+            const usersDoc = await db.collection("shared").doc("users").get();
 
-        this.players = savedPlayers ? JSON.parse(savedPlayers) : [...DEFAULT_PLAYERS];
-        this.matches = savedMatches ? JSON.parse(savedMatches) : [...DEFAULT_MATCHES];
-        this.stats = savedStats ? JSON.parse(savedStats) : [...DEFAULT_STATS];
-        
-        if (savedFormation && FORMATIONS[savedFormation]) {
-            this.selectedFormation = savedFormation;
-            document.getElementById("formation-select").value = savedFormation;
+            // Players
+            if (playersDoc.exists && playersDoc.data().data) {
+                this.players = playersDoc.data().data;
+            } else {
+                this.players = [...DEFAULT_PLAYERS];
+                this.savePlayers();
+            }
+
+            // Matches
+            if (matchesDoc.exists && matchesDoc.data().data) {
+                this.matches = matchesDoc.data().data;
+            } else {
+                this.matches = [...DEFAULT_MATCHES];
+                this.saveMatches();
+            }
+
+            // Stats
+            if (statsDoc.exists && statsDoc.data().data) {
+                this.stats = statsDoc.data().data;
+            } else {
+                this.stats = [...DEFAULT_STATS];
+                this.saveStats();
+            }
+
+            // Formation & Lineups
+            if (formationDoc.exists) {
+                const fData = formationDoc.data();
+                if (fData.selected && FORMATIONS[fData.selected]) {
+                    this.selectedFormation = fData.selected;
+                    document.getElementById("formation-select").value = fData.selected;
+                }
+                this.firestoreLineups = fData.lineups || {};
+            } else {
+                this.firestoreLineups = {};
+                this.saveFormation();
+            }
+
+            // Users
+            if (usersDoc.exists && usersDoc.data().data) {
+                this.users = usersDoc.data().data;
+            } else {
+                this.users = [{ username: "admin", password: "123", photo: null }];
+                this.saveUsers();
+            }
+
+            console.log("✅ Dados carregados do Firebase Firestore");
+        } catch (error) {
+            console.error("❌ Erro ao carregar do Firestore, usando defaults:", error);
+            this.players = [...DEFAULT_PLAYERS];
+            this.matches = [...DEFAULT_MATCHES];
+            this.stats = [...DEFAULT_STATS];
+            this.firestoreLineups = {};
         }
+    }
 
-        // Se for a primeira vez inicializando os dados mockados, salva no localStorage
-        if (!savedPlayers) this.savePlayers();
-        if (!savedMatches) this.saveMatches();
-        if (!savedStats) this.saveStats();
+    // Escuta mudanças em tempo real de outros dispositivos
+    setupRealtimeListeners() {
+        // Players
+        db.collection("shared").doc("players").onSnapshot((doc) => {
+            if (doc.exists && doc.data().data) {
+                this.players = doc.data().data;
+                this.populateDropdowns();
+                this.renderAvailablePlayersList();
+                this.renderTacticalField();
+                this.renderDashboardLineup();
+            }
+        });
+
+        // Matches
+        db.collection("shared").doc("matches").onSnapshot((doc) => {
+            if (doc.exists && doc.data().data) {
+                this.matches = doc.data().data;
+                if (this.matches.length > 0 && !this.matches.find(m => m.id === this.activeMatchId)) {
+                    this.activeMatchId = this.matches[0].id;
+                }
+                this.renderMatchesList();
+                this.renderRsvpPanel();
+                this.renderDashboardMatch();
+            }
+        });
+
+        // Stats
+        db.collection("shared").doc("stats").onSnapshot((doc) => {
+            if (doc.exists && doc.data().data) {
+                this.stats = doc.data().data;
+                this.renderStatsTables();
+                this.renderDashboardStats();
+            }
+        });
+
+        // Formation & Lineups
+        db.collection("shared").doc("formation").onSnapshot((doc) => {
+            if (doc.exists) {
+                const fData = doc.data();
+                if (fData.selected && FORMATIONS[fData.selected]) {
+                    this.selectedFormation = fData.selected;
+                    const formSelect = document.getElementById("formation-select");
+                    if (formSelect) formSelect.value = fData.selected;
+                }
+                this.firestoreLineups = fData.lineups || {};
+                this.renderTacticalField();
+                this.renderDashboardLineup();
+            }
+        });
+
+        // Users
+        db.collection("shared").doc("users").onSnapshot((doc) => {
+            if (doc.exists && doc.data().data) {
+                this.users = doc.data().data;
+            }
+        });
+
+        console.log("🔄 Listeners em tempo real ativados");
     }
 
     savePlayers() {
-        localStorage.setItem("145fc_players", JSON.stringify(this.players));
+        db.collection("shared").doc("players").set({ data: this.players })
+            .catch(err => console.error("Erro ao salvar players:", err));
     }
 
     saveUsers() {
-        localStorage.setItem("145fc_users", JSON.stringify(this.users));
+        db.collection("shared").doc("users").set({ data: this.users })
+            .catch(err => console.error("Erro ao salvar users:", err));
     }
 
     checkAuth() {
@@ -387,15 +495,20 @@ class App145FC {
     }
 
     saveMatches() {
-        localStorage.setItem("145fc_matches", JSON.stringify(this.matches));
+        db.collection("shared").doc("matches").set({ data: this.matches })
+            .catch(err => console.error("Erro ao salvar matches:", err));
     }
 
     saveStats() {
-        localStorage.setItem("145fc_stats", JSON.stringify(this.stats));
+        db.collection("shared").doc("stats").set({ data: this.stats })
+            .catch(err => console.error("Erro ao salvar stats:", err));
     }
 
     saveFormation() {
-        localStorage.setItem("145fc_tactical_formation", this.selectedFormation);
+        db.collection("shared").doc("formation").set({
+            selected: this.selectedFormation,
+            lineups: this.firestoreLineups || {}
+        }).catch(err => console.error("Erro ao salvar formation:", err));
     }
 
     // --- EVENT LISTENERS REGISTRATION ---
@@ -968,13 +1081,13 @@ class App145FC {
     // SEÇÃO: ESCALAÇÃO TÁTICA & CAMPO INTERATIVO
     // ==========================================================================
     getLineupKey(formation) {
-        return `145fc_lineup_${formation}`;
+        return `lineup_${formation}`;
     }
 
     getLineupForFormation(formation) {
-        const savedLineup = localStorage.getItem(this.getLineupKey(formation));
-        if (savedLineup) {
-            return JSON.parse(savedLineup);
+        const key = this.getLineupKey(formation);
+        if (this.firestoreLineups && this.firestoreLineups[key]) {
+            return this.firestoreLineups[key];
         }
         
         // Default: Pega os primeiros 11 jogadores disponíveis
@@ -990,7 +1103,9 @@ class App145FC {
     }
 
     saveLineupForFormation(formation, lineup) {
-        localStorage.setItem(this.getLineupKey(formation), JSON.stringify(lineup));
+        if (!this.firestoreLineups) this.firestoreLineups = {};
+        this.firestoreLineups[this.getLineupKey(formation)] = lineup;
+        this.saveFormation();
     }
 
     renderTacticalField() {
@@ -1971,8 +2086,8 @@ class App145FC {
 
 // Inicializa a Instância Global da App
 const app = new App145FC();
-window.onload = () => {
-    app.init();
+window.onload = async () => {
+    await app.init();
 };
 // Torna global para chamadas inline no HTML
 window.app = app;
