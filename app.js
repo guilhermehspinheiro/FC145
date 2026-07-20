@@ -182,6 +182,69 @@ class App145FC {
         }
     }
 
+    getLoggedInPlayer() {
+        if (!this.loggedInUser) return null;
+        let player = null;
+        if (this.loggedInUser.playerId) {
+            player = this.players.find(p => p.id === this.loggedInUser.playerId);
+        }
+        if (!player) {
+            player = this.players.find(p => p.name.toLowerCase() === this.loggedInUser.username.toLowerCase());
+        }
+        return player;
+    }
+
+    updateProfile(name, number, position, photoData) {
+        if (!this.loggedInUser) return;
+
+        // Valida se o número da camisa já está em uso por OUTRO jogador
+        const currentPlayer = this.getLoggedInPlayer();
+        if (this.players.some(p => p.number === number && (!currentPlayer || p.id !== currentPlayer.id))) {
+            this.showToast(`Erro: A camisa número ${number} já está sendo usada!`);
+            return;
+        }
+
+        // 1. Atualiza dados do usuário logado na lista this.users
+        const userIndex = this.users.findIndex(u => u.username.toLowerCase() === this.loggedInUser.username.toLowerCase());
+        if (userIndex !== -1) {
+            this.users[userIndex].username = name;
+            if (photoData !== undefined) {
+                this.users[userIndex].photo = photoData;
+            }
+            this.saveUsers();
+        }
+
+        // 2. Atualiza dados do jogador correspondente na lista de jogadores
+        if (currentPlayer) {
+            currentPlayer.name = name;
+            currentPlayer.number = number;
+            currentPlayer.position = position;
+            if (photoData !== undefined) {
+                currentPlayer.photo = photoData;
+            }
+            this.savePlayers();
+        }
+
+        // 3. Atualiza dados da sessão logada no localStorage
+        this.loggedInUser.username = name;
+        if (photoData !== undefined) {
+            this.loggedInUser.photo = photoData;
+        }
+        localStorage.setItem("145fc_logged_in_user", JSON.stringify(this.loggedInUser));
+
+        this.showToast("Perfil atualizado com sucesso!");
+        
+        // Esconde o modal
+        const modal = document.getElementById("edit-profile-modal");
+        if (modal) modal.classList.add("hidden");
+
+        // Atualiza exibições
+        this.updateSidebarUserProfile();
+        this.populateDropdowns();
+        this.renderAvailablePlayersList();
+        this.renderAll();
+    }
+
     toggleLoginRegister(mode) {
         this.loginMode = mode;
         const titleEl = document.getElementById("login-title");
@@ -229,25 +292,25 @@ class App145FC {
             return;
         }
 
-        const newUser = {
-            username,
-            password,
-            photo: photoData
-        };
-
-        this.users.push(newUser);
-        this.saveUsers();
-
-        // Cria o jogador no elenco correspondente
+        const playerId = "p_" + Date.now();
         const nextNumber = number || (this.players.length > 0 ? Math.max(...this.players.map(p => p.number)) + 1 : 10);
         const newPlayer = {
-            id: "p_" + Date.now(),
+            id: playerId,
             name: username,
             number: nextNumber,
             position: position || "Meio-Campo",
             photo: photoData
         };
 
+        const newUser = {
+            username,
+            password,
+            photo: photoData,
+            playerId: playerId
+        };
+
+        this.users.push(newUser);
+        this.saveUsers();
         this.players.push(newPlayer);
         this.savePlayers();
 
@@ -402,6 +465,70 @@ class App145FC {
                 e.preventDefault();
                 const currentMode = this.loginMode || "login";
                 this.toggleLoginRegister(currentMode === "login" ? "register" : "login");
+            });
+        }
+
+        // Abrir Modal de Edição de Perfil ao clicar no perfil da sidebar
+        const userProfileCard = document.getElementById("sidebar-user-profile");
+        if (userProfileCard) {
+            userProfileCard.addEventListener("click", () => {
+                const player = this.getLoggedInPlayer();
+                if (player) {
+                    document.getElementById("edit-profile-name").value = player.name;
+                    document.getElementById("edit-profile-number").value = player.number;
+                    document.getElementById("edit-profile-position").value = player.position;
+                } else if (this.loggedInUser) {
+                    document.getElementById("edit-profile-name").value = this.loggedInUser.username;
+                    document.getElementById("edit-profile-number").value = "";
+                    document.getElementById("edit-profile-position").value = "Meio-Campo";
+                }
+                
+                // Limpa o input de arquivo anterior
+                const photoInput = document.getElementById("edit-profile-photo");
+                if (photoInput) photoInput.value = "";
+
+                document.getElementById("edit-profile-modal").classList.remove("hidden");
+            });
+        }
+
+        // Fechar Modal de Edição de Perfil (botão X)
+        const closeEditProfileBtn = document.getElementById("close-edit-profile-btn");
+        if (closeEditProfileBtn) {
+            closeEditProfileBtn.addEventListener("click", () => {
+                document.getElementById("edit-profile-modal").classList.add("hidden");
+            });
+        }
+
+        // Logout dentro do Modal de Edição de Perfil
+        const modalLogoutBtn = document.getElementById("modal-logout-btn");
+        if (modalLogoutBtn) {
+            modalLogoutBtn.addEventListener("click", () => {
+                document.getElementById("edit-profile-modal").classList.add("hidden");
+                this.logout();
+            });
+        }
+
+        // Submissão do Formulário de Edição de Perfil
+        const editProfileForm = document.getElementById("edit-profile-form");
+        if (editProfileForm) {
+            editProfileForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const name = document.getElementById("edit-profile-name").value.trim();
+                const number = parseInt(document.getElementById("edit-profile-number").value) || 10;
+                const position = document.getElementById("edit-profile-position").value;
+                const photoInput = document.getElementById("edit-profile-photo");
+
+                const proceed = (photoData = undefined) => {
+                    this.updateProfile(name, number, position, photoData);
+                };
+
+                if (photoInput && photoInput.files && photoInput.files[0]) {
+                    this.compressImage(photoInput.files[0], (compressedData) => {
+                        proceed(compressedData);
+                    });
+                } else {
+                    proceed(undefined);
+                }
             });
         }
 

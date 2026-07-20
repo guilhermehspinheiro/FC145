@@ -870,6 +870,51 @@
     <!-- Alert / Toast Toast Notification -->
     <div id="toast" class="toast-notification"></div>
 
+    <!-- EDIT PROFILE MODAL -->
+    <div id="edit-profile-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-card">
+            <div class="modal-header">
+                <h3>Editar Perfil</h3>
+                <button class="btn-close-modal" id="close-edit-profile-btn">&times;</button>
+            </div>
+            
+            <form id="edit-profile-form" class="styled-form">
+                <div class="form-group">
+                    <label for="edit-profile-name">Nome do Jogador</label>
+                    <input type="text" id="edit-profile-name" required placeholder="Seu nome">
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-number">Número da Camisa</label>
+                    <input type="number" id="edit-profile-number" min="1" max="99" required placeholder="Ex: 10">
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-position">Posição Favorita</label>
+                    <select id="edit-profile-position" class="custom-select">
+                        <option value="Goleiro">Goleiro (GK)</option>
+                        <option value="Zagueiro">Zagueiro (DF)</option>
+                        <option value="Lateral">Lateral (L/R)</option>
+                        <option value="Meio-Campo">Meio-Campo (MC)</option>
+                        <option value="Atacante">Atacante (AT)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-profile-photo">Foto de Perfil</label>
+                    <input type="file" id="edit-profile-photo" accept="image/*" class="custom-file-input">
+                    <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 0.25rem;">Foto quadrada recomendada. Substituirá a atual.</small>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                    </button>
+                    <button type="button" class="btn btn-block" id="modal-logout-btn" style="background-color: #dc2626; color: #fff; border: none;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta (Logout)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- LOGIN & REGISTRATION OVERLAY -->
     <div id="login-container" class="login-overlay">
         <div class="glass-card login-card">
