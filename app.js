@@ -739,8 +739,22 @@ class App145FC {
     // ==========================================================================
     renderDashboardMatch() {
         const activeMatch = this.matches.find(m => m.id === this.activeMatchId);
+        const rsvpBtn = document.getElementById("dash-rsvp-btn");
+
         if (!activeMatch) {
             document.getElementById("dash-match-opponent").innerText = "Sem Jogo";
+            document.getElementById("dash-match-date").innerText = "Nenhum jogo agendado";
+            document.getElementById("dash-match-time").innerText = "--:--";
+            document.getElementById("dash-match-location").innerText = "A definir";
+            document.getElementById("dash-match-jersey").innerText = "A definir";
+            
+            document.getElementById("dash-rsvp-yes").innerText = "0";
+            document.getElementById("dash-rsvp-maybe").innerText = "0";
+            document.getElementById("dash-rsvp-no").innerText = "0";
+
+            if (rsvpBtn) {
+                rsvpBtn.innerHTML = `<i class="fa-solid fa-calendar-plus"></i> Marcar Jogo`;
+            }
             return;
         }
 
@@ -768,6 +782,10 @@ class App145FC {
         document.getElementById("dash-rsvp-yes").innerText = yes;
         document.getElementById("dash-rsvp-maybe").innerText = maybe;
         document.getElementById("dash-rsvp-no").innerText = no;
+
+        if (rsvpBtn) {
+            rsvpBtn.innerHTML = `<i class="fa-solid fa-user-check"></i> Confirmar Presença`;
+        }
     }
 
     renderDashboardLineup() {
