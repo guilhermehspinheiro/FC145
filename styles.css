@@ -1652,7 +1652,7 @@ body {
     padding: 1rem 1.5rem;
     border-radius: 6px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 100000;
     font-size: 0.9rem;
     font-weight: 600;
     display: flex;
