@@ -515,6 +515,18 @@ class App145FC {
                     document.getElementById("edit-profile-position").value = "Meio-Campo";
                 }
                 
+                // Popula avatar preview
+                const avatarEl = document.getElementById("edit-profile-avatar");
+                if (avatarEl) {
+                    if (player && player.photo) {
+                        avatarEl.style.backgroundImage = `url(${player.photo})`;
+                        avatarEl.innerHTML = "";
+                    } else {
+                        avatarEl.style.backgroundImage = "none";
+                        avatarEl.innerHTML = `<i class="fa-solid fa-user" style="font-size: 2.5rem; color: var(--text-muted);"></i>`;
+                    }
+                }
+
                 // Limpa o input de arquivo anterior
                 const photoInput = document.getElementById("edit-profile-photo");
                 if (photoInput) photoInput.value = "";
@@ -560,6 +572,24 @@ class App145FC {
                     });
                 } else {
                     proceed(undefined);
+                }
+            });
+        }
+
+        // Preview ao vivo da foto no modal de edição de perfil
+        const editPhotoInput = document.getElementById("edit-profile-photo");
+        if (editPhotoInput) {
+            editPhotoInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const avatarEl = document.getElementById("edit-profile-avatar");
+                        if (avatarEl) {
+                            avatarEl.style.backgroundImage = `url(${ev.target.result})`;
+                            avatarEl.innerHTML = "";
+                        }
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
                 }
             });
         }
