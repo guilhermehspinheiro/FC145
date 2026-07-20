@@ -1910,9 +1910,11 @@ body {
     background-color: var(--bg-primary);
     background-image: radial-gradient(circle at 50% 50%, #102040 0%, #0a0c10 100%);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
     z-index: 10000;
+    padding: 2rem 1rem;
 }
 
 .login-card {
@@ -1921,6 +1923,7 @@ body {
     padding: 2.5rem;
     text-align: center;
     box-shadow: var(--card-shadow);
+    margin: auto;
 }
 
 .login-logo-wrapper {
