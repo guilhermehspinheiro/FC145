@@ -8,6 +8,57 @@ const DEFAULT_PLAYERS = [];
 const DEFAULT_MATCHES = [];
 const DEFAULT_STATS = [];
 
+const DEFAULT_TRAINING = {
+    gk: {
+        title: "Foco de Treino - Goleiros",
+        desc: "Tempo de reação, posicionamento de baliza, flexibilidade e impulsão lateral.",
+        exercises: [
+            "Deslocamento Lateral Rápido: 4 séries de 30 segundos tocando nos cones laterais de 5m.",
+            "Pega de Bola Alta: Exercício com cruzamentos na área (15 repetições).",
+            "Queda Lateral Controlada: Caídas com bola lançada rasteira à meia distância (12 para cada lado)."
+        ],
+        timerTitle: "Aquecimento Pré-Jogo",
+        timerDesc: "Faça a ativação de articulações e reflexos.",
+        timerMinutes: 10
+    },
+    df: {
+        title: "Foco de Treino - Defensores (Zagueiros & Laterais)",
+        desc: "Poder de cabeceio, antecipação, passes de saída e posicionamento de cobertura.",
+        exercises: [
+            "Corrida de Costas e Recuperação: Pique de costas 5m, giro de quadril e corrida de 10m de frente. (5 repetições)",
+            "Duelos Aéreos: Saltar simulando cabeceio defensivo contra atacante na marcação da área. (12 saltos)",
+            "Passe Firme & Saída de Jogo: Tabelas rápidas de 1-2 toques a 10 metros de distância com o meio-campo."
+        ],
+        timerTitle: "Aquecimento Pré-Jogo",
+        timerDesc: "Mobilidade de quadril e piques curtos.",
+        timerMinutes: 8
+    },
+    mc: {
+        title: "Foco de Treino - Meio-Campistas",
+        desc: "Visão de jogo, controle orientado, transição rápida e resistência aeróbica.",
+        exercises: [
+            "Rondo (Bobinho): Espaço reduzido 4x1 ou 5x2 focando em posse rápida de 1 toque. (10 min)",
+            "Controle e Giro 180°: Receber a bola de costas para o gol fictício, girar em um toque e fazer o passe longo.",
+            "Piques Intermitentes: Simulações de transição de alta intensidade campo a campo."
+        ],
+        timerTitle: "Aquecimento Pré-Jogo",
+        timerDesc: "Ativação neuromuscular e posse rápida.",
+        timerMinutes: 8
+    },
+    at: {
+        title: "Foco de Treino - Atacantes & Pontas",
+        desc: "Finalização precisa, aceleração explosiva, drible curto de 1 contra 1 e agressividade.",
+        exercises: [
+            "Chute Rápido Pós-Giro: Chutes de primeira na entrada da área simulando pivô. (15 finalizações)",
+            "Piques Explosivos de 20m: Tiros de corrida curta saindo de diferentes posições. (6 tiros)",
+            "Cruzamento e Finalização: Pontas cruzam da linha de fundo e centroavantes atacam o primeiro e segundo pau."
+        ],
+        timerTitle: "Aquecimento Pré-Jogo",
+        timerDesc: "Aceleração e chutes ao gol.",
+        timerMinutes: 6
+    }
+};
+
 // --- COORDENADAS TÁTICAS (PERCENTUAL EM RELAÇÃO AO CAMPO DE 480x580) ---
 const FORMATIONS = {
     "4-3-3": [
@@ -94,6 +145,14 @@ class App145FC {
         this.boardOpponentsVisible = true;
         this.boardPenColor = "#0055ff";
         this.boardPenSize = 4;
+        this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
+    }
+
+    isAdminOrManager() {
+        if (!this.loggedInUser) return false;
+        const managers = ["admin", "guilherme pinheiro", "eduardo"];
+        const username = (this.loggedInUser.username || "").trim().toLowerCase();
+        return managers.includes(username);
     }
 
     async init() {
@@ -181,6 +240,15 @@ class App145FC {
                 this.saveUsers();
             }
 
+            // Training Data
+            const trainingDoc = await db.collection("shared").doc("training").get();
+            if (trainingDoc.exists && trainingDoc.data().data) {
+                this.trainingData = trainingDoc.data().data;
+            } else {
+                this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
+                this.saveTraining();
+            }
+
             console.log("✅ Dados carregados do Firebase Firestore");
         } catch (error) {
             console.error("❌ Erro ao carregar do Firestore, usando defaults:", error);
@@ -248,6 +316,14 @@ class App145FC {
             }
         });
 
+        // Training
+        db.collection("shared").doc("training").onSnapshot((doc) => {
+            if (doc.exists && doc.data().data) {
+                this.trainingData = doc.data().data;
+                this.renderTrainingSection();
+            }
+        });
+
         console.log("🔄 Listeners em tempo real ativados");
     }
 
@@ -259,6 +335,11 @@ class App145FC {
     saveUsers() {
         db.collection("shared").doc("users").set({ data: this.users })
             .catch(err => console.error("Erro ao salvar users:", err));
+    }
+
+    saveTraining() {
+        db.collection("shared").doc("training").set({ data: this.trainingData })
+            .catch(err => console.error("Erro ao salvar treinos:", err));
     }
 
     checkAuth() {
@@ -564,6 +645,11 @@ class App145FC {
 
         // Formação do Campo
         document.getElementById("formation-select").addEventListener("change", (e) => {
+            if (!this.isAdminOrManager()) {
+                this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode alterar o esquema tático.");
+                e.target.value = this.selectedFormation;
+                return;
+            }
             this.selectedFormation = e.target.value;
             this.saveFormation();
             this.selectedFieldPlayerIndex = null;
@@ -833,6 +919,11 @@ class App145FC {
         const boardFormSelect = document.getElementById("board-formation-select");
         if (boardFormSelect) {
             boardFormSelect.addEventListener("change", (e) => {
+                if (!this.isAdminOrManager()) {
+                    this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar o esquema da prancheta.");
+                    e.target.value = this.selectedFormation;
+                    return;
+                }
                 this.resetBoardPlayers(e.target.value);
                 this.showToast(`Prancheta resetada no esquema ${e.target.value}`);
             });
@@ -842,6 +933,10 @@ class App145FC {
         const toggleOppsBtn = document.getElementById("toggle-opponents-btn");
         if (toggleOppsBtn) {
             toggleOppsBtn.addEventListener("click", () => {
+                if (!this.isAdminOrManager()) {
+                    this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar opções da prancheta.");
+                    return;
+                }
                 this.boardOpponentsVisible = !this.boardOpponentsVisible;
                 document.getElementById("board-away-players-layer").classList.toggle("hidden", !this.boardOpponentsVisible);
                 toggleOppsBtn.innerHTML = this.boardOpponentsVisible 
@@ -855,6 +950,10 @@ class App145FC {
         const clearBoardBtn = document.getElementById("clear-board-drawings-btn");
         if (clearBoardBtn) {
             clearBoardBtn.addEventListener("click", () => {
+                if (!this.isAdminOrManager()) {
+                    this.showToast("Modo Visualização: Apenas a comissão técnica pode limpar a prancheta.");
+                    return;
+                }
                 this.clearBoardDrawings();
                 this.showToast("Desenhos da prancheta limpos.");
             });
@@ -864,9 +963,48 @@ class App145FC {
         const resetBoardBtn = document.getElementById("reset-board-players-btn");
         if (resetBoardBtn) {
             resetBoardBtn.addEventListener("click", () => {
+                if (!this.isAdminOrManager()) {
+                    this.showToast("Modo Visualização: Apenas a comissão técnica pode resetar a prancheta.");
+                    return;
+                }
                 const form = document.getElementById("board-formation-select").value;
                 this.resetBoardPlayers(form);
                 this.showToast("Posições dos jogadores resetadas.");
+            });
+        }
+
+        // Treinos: Abrir Modal de Edição (Apenas Comissão Técnica)
+        const openEditTrainingBtn = document.getElementById("open-edit-training-btn");
+        if (openEditTrainingBtn) {
+            openEditTrainingBtn.addEventListener("click", () => {
+                if (!this.isAdminOrManager()) {
+                    this.showToast("Modo Visualização: Apenas a comissão técnica pode editar os treinos.");
+                    return;
+                }
+                this.populateTrainingForm("gk");
+                document.getElementById("edit-training-modal").classList.remove("hidden");
+            });
+        }
+
+        const closeEditTrainingBtn = document.getElementById("close-edit-training-btn");
+        if (closeEditTrainingBtn) {
+            closeEditTrainingBtn.addEventListener("click", () => {
+                document.getElementById("edit-training-modal").classList.add("hidden");
+            });
+        }
+
+        const editTrainingPosSelect = document.getElementById("edit-training-pos");
+        if (editTrainingPosSelect) {
+            editTrainingPosSelect.addEventListener("change", (e) => {
+                this.populateTrainingForm(e.target.value);
+            });
+        }
+
+        const editTrainingForm = document.getElementById("edit-training-form");
+        if (editTrainingForm) {
+            editTrainingForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.saveTrainingFromForm();
             });
         }
 
@@ -901,6 +1039,7 @@ class App145FC {
         this.renderRsvpPanel();
         
         this.renderStatsTables();
+        this.renderTrainingSection();
         this.populateDropdowns();
     }
 
@@ -1208,6 +1347,10 @@ class App145FC {
     }
 
     selectFieldPlayer(index) {
+        if (!this.isAdminOrManager()) {
+            this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode alterar a escalação.");
+            return;
+        }
         if (this.selectedFieldPlayerIndex === index) {
             this.selectedFieldPlayerIndex = null;
         } else {
@@ -1222,6 +1365,12 @@ class App145FC {
         const pool = document.getElementById("available-players-pool");
         if (!pool) return;
         pool.innerHTML = "";
+
+        // Esconde ou exibe botão Novo Jogador dependendo da permissão
+        const addTabBtn = document.getElementById("tab-add-player-btn");
+        if (addTabBtn) {
+            addTabBtn.style.display = this.isAdminOrManager() ? "inline-block" : "none";
+        }
 
         const query = filterQuery.toLowerCase().trim();
         const lineupPlayerIds = this.getLineupForFormation(this.selectedFormation);
@@ -1251,6 +1400,12 @@ class App145FC {
                 ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo})"></div>` 
                 : player.number;
 
+            const removeBtnHtml = this.isAdminOrManager() ? `
+                <button class="btn-remove-player" title="Excluir Jogador" onclick="event.stopPropagation(); app.deletePlayer('${player.id}')">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+            ` : '';
+
             item.innerHTML = `
                 <div class="squad-player-info">
                     <div class="player-badge-num" style="${player.photo ? 'padding:0; background:none; border:none; display:flex; align-items:center; justify-content:center;' : ''}">${badgeContent}</div>
@@ -1259,15 +1414,18 @@ class App145FC {
                         <div class="squad-player-pos">${player.position}</div>
                     </div>
                 </div>
-                <button class="btn-remove-player" title="Excluir Jogador" onclick="event.stopPropagation(); app.deletePlayer('${player.id}')">
-                    <i class="fa-regular fa-trash-can"></i>
-                </button>
+                ${removeBtnHtml}
             `;
             pool.appendChild(item);
         });
     }
 
     handlePlayerPoolClick(playerId) {
+        if (!this.isAdminOrManager()) {
+            this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode alterar a escalação.");
+            return;
+        }
+
         if (this.selectedFieldPlayerIndex === null) {
             this.showToast("Selecione primeiro uma camisa preta no campo de futebol acima para substituí-la.");
             return;
@@ -1298,6 +1456,11 @@ class App145FC {
     }
 
     addNewPlayer() {
+        if (!this.isAdminOrManager()) {
+            this.showToast("Modo Visualização: Apenas a comissão técnica pode adicionar jogadores ao elenco.");
+            return;
+        }
+
         const nameInput = document.getElementById("new-player-name");
         const numberInput = document.getElementById("new-player-number");
         const positionInput = document.getElementById("new-player-position");
@@ -1626,12 +1789,107 @@ class App145FC {
         this.updateTimerDisplay(pos);
     }
 
-    updateTimerDisplay(pos) {
-        const tState = this.timers[pos];
-        const minutes = Math.floor(tState.remaining / 60);
-        const seconds = tState.remaining % 60;
-        const displayStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById(`timer-display-pos-${pos}` || `timer-display-${pos}`).innerText = displayStr;
+    renderTrainingSection() {
+        const editBtn = document.getElementById("open-edit-training-btn");
+        if (editBtn) {
+            editBtn.style.display = this.isAdminOrManager() ? "inline-flex" : "none";
+        }
+
+        if (!this.trainingData) return;
+
+        const positions = ['gk', 'df', 'mc', 'at'];
+        positions.forEach(pos => {
+            const data = this.trainingData[pos];
+            const container = document.getElementById(`training-${pos}`);
+            if (!container || !data) return;
+
+            const exercisesListHtml = (data.exercises || [])
+                .map(ex => `<li>${ex}</li>`)
+                .join('');
+
+            const remainingSecs = (this.timers[pos] && this.timers[pos].running) 
+                ? this.timers[pos].remaining 
+                : (data.timerMinutes * 60);
+
+            const displayMins = Math.floor(remainingSecs / 60);
+            const displaySecs = remainingSecs % 60;
+            const displayStr = `${displayMins.toString().padStart(2, '0')}:${displaySecs.toString().padStart(2, '0')}`;
+
+            container.innerHTML = `
+                <div class="training-grid">
+                    <div class="training-info-block">
+                        <h2>${data.title}</h2>
+                        <p class="section-desc">${data.desc}</p>
+                        
+                        <h3>Exercícios Recomendados:</h3>
+                        <ul class="exercise-list">
+                            ${exercisesListHtml}
+                        </ul>
+                    </div>
+
+                    <div class="timer-block">
+                        <div class="timer-card">
+                            <h3>${data.timerTitle}</h3>
+                            <p>${data.timerDesc}</p>
+                            <div class="timer-display" id="timer-display-${pos}">${displayStr}</div>
+                            <div class="timer-controls">
+                                <button class="btn btn-success" onclick="app.toggleTimer('${pos}')"><i class="fa-solid fa-play" id="timer-icon-${pos}"></i> ${this.timers[pos] && this.timers[pos].running ? 'Pausar' : 'Iniciar'}</button>
+                                <button class="btn btn-secondary" onclick="app.resetTimer('${pos}', ${data.timerMinutes * 60})"><i class="fa-solid fa-arrow-rotate-left"></i> Resetar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    populateTrainingForm(pos) {
+        const selectPos = document.getElementById("edit-training-pos");
+        if (selectPos) selectPos.value = pos;
+
+        const data = this.trainingData[pos] || DEFAULT_TRAINING[pos];
+        if (!data) return;
+
+        document.getElementById("edit-training-title").value = data.title || "";
+        document.getElementById("edit-training-desc").value = data.desc || "";
+        document.getElementById("edit-training-exercises").value = (data.exercises || []).join("\n");
+        document.getElementById("edit-training-timer-title").value = data.timerTitle || "";
+        document.getElementById("edit-training-timer-desc").value = data.timerDesc || "";
+        document.getElementById("edit-training-timer-min").value = data.timerMinutes || 8;
+    }
+
+    saveTrainingFromForm() {
+        if (!this.isAdminOrManager()) {
+            this.showToast("Modo Visualização: Apenas a comissão técnica pode editar os treinos.");
+            return;
+        }
+
+        const pos = document.getElementById("edit-training-pos").value;
+        const title = document.getElementById("edit-training-title").value.trim();
+        const desc = document.getElementById("edit-training-desc").value.trim();
+        const exercisesText = document.getElementById("edit-training-exercises").value;
+        const timerTitle = document.getElementById("edit-training-timer-title").value.trim();
+        const timerDesc = document.getElementById("edit-training-timer-desc").value.trim();
+        const timerMinutes = parseInt(document.getElementById("edit-training-timer-min").value) || 8;
+
+        const exercises = exercisesText
+            .split("\n")
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        this.trainingData[pos] = {
+            title,
+            desc,
+            exercises,
+            timerTitle,
+            timerDesc,
+            timerMinutes
+        };
+
+        this.saveTraining();
+        document.getElementById("edit-training-modal").classList.add("hidden");
+        this.renderTrainingSection();
+        this.showToast(`Treinos da posição [${pos.toUpperCase()}] salvos no Firestore!`);
     }
 
     // Beep sonoro usando Web Audio API (100% livre de assets externos)
@@ -1920,6 +2178,10 @@ class App145FC {
 
         // Eventos de Desenho no Canvas (Mouse & Toque)
         const onStartDraw = (e) => {
+            if (!this.isAdminOrManager()) {
+                this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode desenhar na prancheta.");
+                return;
+            }
             const coords = this.getCanvasCoords(e, canvas);
             this.boardDrawing = true;
             this.boardContext.beginPath();
@@ -2062,6 +2324,10 @@ class App145FC {
         let startLeft = 0, startTop = 0;
 
         const dragStart = (e) => {
+            if (!this.isAdminOrManager()) {
+                this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode mover os jogadores na prancheta.");
+                return;
+            }
             // Evita que o canvas desenhe ao arrastar o jogador
             e.stopPropagation();
 
