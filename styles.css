@@ -32,7 +32,12 @@ html.pre-logged-in #login-container {
     display: none !important;
 }
 html.pre-logged-in .app-container {
-    display: flex !important;
+    display: grid;
+}
+@media (max-width: 950px) {
+    html.pre-logged-in .app-container {
+        display: block !important;
+    }
 }
 
 * {
