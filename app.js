@@ -543,18 +543,30 @@ class App145FC {
             this.isDataLoaded = true;
         }
 
-        const cleanUser = (username || "").trim().toLowerCase();
-        const cleanPass = (password || "").trim();
+        const normalizeStr = (str) => (str || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, " ");
 
-        if (!cleanUser || !cleanPass) {
+        const inputUser = normalizeStr(username);
+        const inputPass = (password || "").trim();
+
+        if (!inputUser || !inputPass) {
             this.showToast("Erro: Preencha o usuário e a senha.");
             return;
         }
 
-        const found = this.users.find(u => 
-            (u.username || "").trim().toLowerCase() === cleanUser && 
-            (u.password || "").trim() === cleanPass
-        );
+        // Busca o usuário com tolerância a acentos, maiúsculas e espaços extras do teclado mobile
+        const found = this.users.find(u => {
+            const uName = normalizeStr(u.username);
+            const uPass = (u.password || "").trim();
+            const isNameMatch = (uName === inputUser) || 
+                                (uName.startsWith(inputUser) && inputUser.length >= 3) ||
+                                (inputUser.startsWith(uName) && uName.length >= 3);
+            return isNameMatch && uPass === inputPass;
+        });
 
         if (found) {
             localStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
@@ -711,9 +723,12 @@ class App145FC {
         });
 
         // Toggle do Menu Mobile
-        document.getElementById("menu-toggle").addEventListener("click", () => {
-            document.querySelector(".sidebar").classList.toggle("open");
-        });
+        const menuToggleBtn = document.getElementById("menu-toggle");
+        if (menuToggleBtn) {
+            menuToggleBtn.addEventListener("click", () => {
+                this.toggleMobileSidebar();
+            });
+        }
 
         // Formação do Campo
         document.getElementById("formation-select").addEventListener("change", (e) => {
@@ -1152,6 +1167,8 @@ class App145FC {
 
 
     switchTab(tabId) {
+        this.closeMobileSidebar();
+
         document.querySelectorAll(".nav-link").forEach(link => {
             if (link.getAttribute("data-tab") === tabId) {
                 link.classList.add("active");
@@ -2115,6 +2132,28 @@ class App145FC {
     closePhotoLightbox() {
         const modal = document.getElementById("photo-lightbox-modal");
         if (modal) modal.classList.add("hidden");
+    }
+
+    toggleMobileSidebar() {
+        const sidebar = document.querySelector(".sidebar");
+        const backdrop = document.getElementById("sidebar-backdrop");
+        if (sidebar) {
+            sidebar.classList.toggle("open");
+            if (backdrop) {
+                if (sidebar.classList.contains("open")) {
+                    backdrop.classList.remove("hidden");
+                } else {
+                    backdrop.classList.add("hidden");
+                }
+            }
+        }
+    }
+
+    closeMobileSidebar() {
+        const sidebar = document.querySelector(".sidebar");
+        const backdrop = document.getElementById("sidebar-backdrop");
+        if (sidebar) sidebar.classList.remove("open");
+        if (backdrop) backdrop.classList.add("hidden");
     }
 
     renderNoticeBoard() {
