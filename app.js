@@ -166,7 +166,7 @@ class App145FC {
         return this.boardMode === "free" || this.isAdminOrManager();
     }
 
-    setBoardMode(mode) {
+    setBoardMode(mode, notify = true) {
         this.boardMode = mode;
         const btnOfficial = document.getElementById("btn-board-official");
         const btnFree = document.getElementById("btn-board-free");
@@ -175,7 +175,7 @@ class App145FC {
             if (mode === "official") {
                 btnOfficial.classList.add("active");
                 btnFree.classList.remove("active");
-                this.showToast("Exibindo Prancheta Oficial do Treinador.");
+                if (notify) this.showToast("Exibindo Prancheta Oficial do Treinador.");
                 // Limpa os desenhos e reseta as posições para o esquema oficial
                 this.boardHistoryStack = [];
                 this.clearBoardDrawings();
@@ -183,7 +183,7 @@ class App145FC {
             } else {
                 btnOfficial.classList.remove("active");
                 btnFree.classList.add("active");
-                this.showToast("Prancheta Livre ativada! Você pode mover e desenhar à vontade.");
+                if (notify) this.showToast("Prancheta Livre ativada! Você pode mover e desenhar à vontade.");
             }
         }
     }
@@ -1187,7 +1187,10 @@ class App145FC {
             this.renderDashboardMatch();
             this.renderDashboardLineup();
         } else if (tabId === "board") {
-            // Redimensiona o canvas para ajustar à área física visível e limpa/inicia contexto
+            // Garante que a sub-aba (Oficial vs Livre) persista a última selecionada
+            const currentMode = this.boardMode || "official";
+            this.setBoardMode(currentMode, false);
+
             setTimeout(() => {
                 this.resizeBoardCanvas();
             }, 100);
@@ -2030,6 +2033,56 @@ class App145FC {
         this.expandPlayerPhoto(player.name, player.photo, player.number, player.position);
     }
 
+    sharpenPhoto(dataUrl, callback) {
+        if (!dataUrl || !dataUrl.startsWith("data:image")) {
+            callback(dataUrl);
+            return;
+        }
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const w = img.width;
+            const h = img.height;
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            try {
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const src = imgData.data;
+                const output = ctx.createImageData(w, h);
+                const dst = output.data;
+                const mix = 0.3; // Nível ideal de nitidez sem artefatos
+
+                for (let y = 1; y < h - 1; y++) {
+                    for (let x = 1; x < w - 1; x++) {
+                        const i = (y * w + x) * 4;
+                        const top = ((y - 1) * w + x) * 4;
+                        const bot = ((y + 1) * w + x) * 4;
+                        const left = (y * w + (x - 1)) * 4;
+                        const right = (y * w + (x + 1)) * 4;
+
+                        for (let c = 0; c < 3; c++) {
+                            const center = src[i + c];
+                            const edge = (src[top + c] + src[bot + c] + src[left + c] + src[right + c]) / 4;
+                            const sharp = center + (center - edge) * mix;
+                            dst[i + c] = Math.min(255, Math.max(0, sharp));
+                        }
+                        dst[i + 3] = src[i + 3];
+                    }
+                }
+                ctx.putImageData(output, 0, 0);
+                callback(canvas.toDataURL("image/jpeg", 0.95));
+            } catch (e) {
+                callback(dataUrl);
+            }
+        };
+        img.onerror = () => callback(dataUrl);
+        img.src = dataUrl;
+    }
+
     expandPlayerPhoto(name, photoUrl, number, position) {
         if (!this.loggedInUser) return;
         if (!photoUrl) {
@@ -2044,6 +2097,9 @@ class App145FC {
         if (modal && nameEl && infoEl) {
             if (imgEl) {
                 imgEl.src = photoUrl;
+                this.sharpenPhoto(photoUrl, (sharpenedUrl) => {
+                    if (imgEl) imgEl.src = sharpenedUrl;
+                });
             }
             nameEl.innerText = name || 'Jogador';
             infoEl.innerText = `#${number || '?'} • ${position || 'Atleta'}`;
