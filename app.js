@@ -2029,18 +2029,22 @@ class App145FC {
         }
 
         const token = this.selectedBoardToken;
+        const playerNum = (player.number !== undefined && player.number !== null && player.number !== "") ? player.number : "?";
+
         if (player.photo) {
+            token.classList.add("has-photo");
             token.style.backgroundImage = `url(${player.photo})`;
             token.style.backgroundSize = "cover";
             token.style.backgroundPosition = "center";
             token.innerText = "";
         } else {
+            token.classList.remove("has-photo");
             token.style.backgroundImage = "none";
-            token.innerText = player.number;
+            token.innerText = playerNum;
         }
 
         token.setAttribute("data-player-name", player.name);
-        this.showToast(`${player.name} escalado na prancheta!`);
+        this.showToast(`${player.name} (#${playerNum}) escalado na prancheta!`);
 
         token.style.outline = "none";
         this.selectedBoardToken = null;
@@ -2726,14 +2730,19 @@ class App145FC {
             token.title = player ? `${player.name} (${pos.role})` : pos.role;
 
             if (player) {
+                const playerNum = (player.number !== undefined && player.number !== null && player.number !== "") ? player.number : (idx + 1);
                 if (player.photo) {
                     token.classList.add("has-photo");
                     token.style.backgroundImage = `url(${player.photo})`;
                     token.innerText = "";
                 } else {
-                    token.innerText = player.number;
+                    token.classList.remove("has-photo");
+                    token.style.backgroundImage = "none";
+                    token.innerText = playerNum;
                 }
             } else {
+                token.classList.remove("has-photo");
+                token.style.backgroundImage = "none";
                 token.innerText = idx + 1; // Número sequencial se não houver titular
             }
 
