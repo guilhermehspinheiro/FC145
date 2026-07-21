@@ -157,9 +157,14 @@ class App145FC {
 
     isAdminOrManager() {
         if (!this.loggedInUser) return false;
-        const managers = ["admin", "guilherme pinheiro", "eduardo"];
-        const username = (this.loggedInUser.username || "").trim().toLowerCase();
-        return managers.includes(username);
+        const norm = (str) => (str || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+        const username = norm(this.loggedInUser.username || this.loggedInUser.name);
+        const managers = ["admin", "guilherme pinheiro", "guilherme", "eduardo"];
+        return managers.some(m => username.includes(m) || m.includes(username));
     }
 
     canEditBoard() {
@@ -1606,7 +1611,7 @@ class App145FC {
 
             const badgeContent = player.photo 
                 ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerById('${player.id}')" title="Clique para expandir foto"></div>` 
-                : player.number;
+                : `<span onclick="event.stopPropagation(); app.expandPlayerById('${player.id}')" style="cursor:pointer;" title="Clique para ver detalhes">${player.number}</span>`;
 
             const removeBtnHtml = this.isAdminOrManager() ? `
                 <button class="btn-remove-player" title="Excluir Jogador" onclick="event.stopPropagation(); app.deletePlayer('${player.id}')">
@@ -1629,39 +1634,35 @@ class App145FC {
     }
 
     handlePlayerPoolClick(playerId) {
-        // Se NÃO for da comissão técnica (atleta em modo leitura), expande a foto do jogador
         if (!this.isAdminOrManager()) {
             this.expandPlayerById(playerId);
             return;
         }
 
-        // Se for da comissão técnica e tiver uma posição no campo selecionada para substituição
-        if (this.selectedFieldPlayerIndex !== null) {
-            const lineup = this.getLineupForFormation(this.selectedFormation);
-            const alreadyInLineupIdx = lineup.indexOf(playerId);
-
-            // Se o jogador selecionado na lista já estiver em outra posição no campo
-            if (alreadyInLineupIdx !== -1) {
-                const currentPlayerAtPosition = lineup[this.selectedFieldPlayerIndex];
-                lineup[alreadyInLineupIdx] = currentPlayerAtPosition;
-                lineup[this.selectedFieldPlayerIndex] = playerId;
-                this.showToast("Jogadores trocaram de posições no campo.");
-            } else {
-                lineup[this.selectedFieldPlayerIndex] = playerId;
-                const player = this.players.find(p => p.id === playerId);
-                this.showToast(`${player.name} entrou na escalação.`);
-            }
-
-            this.saveLineupForFormation(this.selectedFormation, lineup);
-            this.selectedFieldPlayerIndex = null;
-            this.renderTacticalField();
-            this.renderAvailablePlayersList();
-            this.renderDashboardLineup();
+        if (this.selectedFieldPlayerIndex === null) {
+            this.showToast("Selecione primeiro uma camisa preta no campo de futebol acima para substituí-la.");
             return;
         }
 
-        // Se for da comissão técnica mas NENHUMA posição do campo estiver selecionada, expande a foto do jogador
-        this.expandPlayerById(playerId);
+        const lineup = this.getLineupForFormation(this.selectedFormation);
+        const alreadyInLineupIdx = lineup.indexOf(playerId);
+
+        if (alreadyInLineupIdx !== -1) {
+            const currentPlayerAtPosition = lineup[this.selectedFieldPlayerIndex];
+            lineup[alreadyInLineupIdx] = currentPlayerAtPosition;
+            lineup[this.selectedFieldPlayerIndex] = playerId;
+            this.showToast("Jogadores trocaram de posições no campo.");
+        } else {
+            lineup[this.selectedFieldPlayerIndex] = playerId;
+            const player = this.players.find(p => p.id === playerId);
+            this.showToast(`${player ? player.name : 'Jogador'} entrou na escalação.`);
+        }
+
+        this.saveLineupForFormation(this.selectedFormation, lineup);
+        this.selectedFieldPlayerIndex = null;
+        this.renderTacticalField();
+        this.renderAvailablePlayersList();
+        this.renderDashboardLineup();
     }
 
     addNewPlayer() {
