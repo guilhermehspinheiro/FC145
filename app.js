@@ -170,6 +170,9 @@ class App145FC {
                 btnOfficial.classList.add("active");
                 btnFree.classList.remove("active");
                 this.showToast("Exibindo Prancheta Oficial do Treinador.");
+                // Limpa os desenhos e reseta as posições para o esquema oficial
+                this.clearBoardDrawings();
+                this.resetBoardPlayers(this.selectedFormation);
             } else {
                 btnOfficial.classList.remove("active");
                 btnFree.classList.add("active");
