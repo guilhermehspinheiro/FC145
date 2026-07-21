@@ -627,15 +627,15 @@ class App145FC {
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
                 
-                canvas.width = 600;
-                canvas.height = 600;
+                canvas.width = 800;
+                canvas.height = 800;
                 
                 const size = Math.min(img.width, img.height);
                 const x = (img.width - size) / 2;
                 const y = (img.height - size) / 2;
                 
-                ctx.drawImage(img, x, y, size, size, 0, 0, 600, 600);
-                callback(canvas.toDataURL("image/jpeg", 0.85));
+                ctx.drawImage(img, x, y, size, size, 0, 0, 800, 800);
+                callback(canvas.toDataURL("image/jpeg", 0.92));
             };
             img.src = e.target.result;
         };
@@ -1166,6 +1166,23 @@ class App145FC {
         // Rerenderizações específicas ao focar nas abas
         if (tabId === "tactical") {
             this.renderTacticalField();
+            this.renderAvailablePlayersList();
+
+            // Garante que o painel lateral de jogadores sempre abra ativo por padrão
+            document.querySelectorAll(".squad-panel .panel-tab-btn").forEach(btn => {
+                if (btn.getAttribute("data-panel-tab") === "players-list") {
+                    btn.classList.add("active");
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+            document.querySelectorAll(".squad-panel .panel-tab-content").forEach(content => {
+                if (content.getAttribute("id") === "panel-players-list") {
+                    content.classList.add("active");
+                } else {
+                    content.classList.remove("active");
+                }
+            });
         } else if (tabId === "dashboard") {
             this.renderDashboardMatch();
             this.renderDashboardLineup();
@@ -2020,12 +2037,14 @@ class App145FC {
             return;
         }
         const modal = document.getElementById("photo-lightbox-modal");
-        const imgContainer = document.getElementById("lightbox-image-container");
+        const imgEl = document.getElementById("lightbox-player-img");
         const nameEl = document.getElementById("lightbox-player-name");
         const infoEl = document.getElementById("lightbox-player-info");
 
-        if (modal && imgContainer && nameEl && infoEl) {
-            imgContainer.style.backgroundImage = `url(${photoUrl})`;
+        if (modal && nameEl && infoEl) {
+            if (imgEl) {
+                imgEl.src = photoUrl;
+            }
             nameEl.innerText = name || 'Jogador';
             infoEl.innerText = `#${number || '?'} • ${position || 'Atleta'}`;
             modal.classList.remove("hidden");
