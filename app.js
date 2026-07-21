@@ -627,14 +627,14 @@ class App145FC {
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
                 
-                canvas.width = 800;
-                canvas.height = 800;
+                canvas.width = 1000;
+                canvas.height = 1000;
                 
                 const size = Math.min(img.width, img.height);
                 const x = (img.width - size) / 2;
                 const y = (img.height - size) / 2;
                 
-                ctx.drawImage(img, x, y, size, size, 0, 0, 800, 800);
+                ctx.drawImage(img, x, y, size, size, 0, 0, 1000, 1000);
                 callback(canvas.toDataURL("image/jpeg", 0.92));
             };
             img.src = e.target.result;
