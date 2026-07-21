@@ -4,13 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>145FC - Painel do Time</title>
+
+    <!-- iOS & PWA WebApp Settings -->
+    <meta name="apple-mobile-web-app-title" content="145FC">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=22.0.0">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=22.0.0">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=22.0.0">
+    <link rel="shortcut icon" href="favicon.png?v=22.0.0">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=21.0.0">
+    <link rel="stylesheet" href="styles.css?v=22.0.0">
     <script>
         if (localStorage.getItem("145fc_logged_in_user") || sessionStorage.getItem("145fc_logged_in_user")) {
             document.documentElement.classList.add("pre-logged-in");
@@ -1153,6 +1164,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
-    <script src="app.js?v=21.0.0"></script>
+    <script src="app.js?v=22.0.0"></script>
 </body>
 </html>
