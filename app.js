@@ -148,6 +148,10 @@ class App145FC {
         this.boardMode = "official"; // "official" or "free"
         this.boardHistoryStack = [];
         this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
+        this.noticeData = {
+            title: "Avisos & Orientações do Treinador",
+            text: "Chegar com 30 minutos de antecedência. Não esquecer a caneleira e a garrafa de água!"
+        };
     }
 
     isAdminOrManager() {
@@ -277,6 +281,12 @@ class App145FC {
                 this.saveTraining();
             }
 
+            // Notice Data
+            const noticeDoc = await db.collection("shared").doc("notice").get();
+            if (noticeDoc.exists && noticeDoc.data().data) {
+                this.noticeData = noticeDoc.data().data;
+            }
+
             console.log("✅ Dados carregados do Firebase Firestore");
         } catch (error) {
             console.error("❌ Erro ao carregar do Firestore, usando defaults:", error);
@@ -349,6 +359,14 @@ class App145FC {
             if (doc.exists && doc.data().data) {
                 this.trainingData = doc.data().data;
                 this.renderTrainingSection();
+            }
+        });
+
+        // Notice
+        db.collection("shared").doc("notice").onSnapshot((doc) => {
+            if (doc.exists && doc.data().data) {
+                this.noticeData = doc.data().data;
+                this.renderNoticeBoard();
             }
         });
 
@@ -1053,6 +1071,21 @@ class App145FC {
             });
         }
 
+        const closeEditNoticeBtn = document.getElementById("close-edit-notice-btn");
+        if (closeEditNoticeBtn) {
+            closeEditNoticeBtn.addEventListener("click", () => {
+                document.getElementById("edit-notice-modal").classList.add("hidden");
+            });
+        }
+
+        const editNoticeForm = document.getElementById("edit-notice-form");
+        if (editNoticeForm) {
+            editNoticeForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.saveNotice();
+            });
+        }
+
         // Paleta de Cores
         document.querySelectorAll(".color-swatch").forEach(swatch => {
             swatch.addEventListener("click", () => {
@@ -1076,6 +1109,8 @@ class App145FC {
         this.renderDashboardMatch();
         this.renderDashboardLineup();
         this.renderDashboardStats();
+        this.updateMatchCountdown();
+        this.renderNoticeBoard();
         
         this.renderTacticalField();
         this.renderAvailablePlayersList();
@@ -1087,6 +1122,8 @@ class App145FC {
         this.renderTrainingSection();
         this.populateDropdowns();
     }
+
+
 
     switchTab(tabId) {
         document.querySelectorAll(".nav-link").forEach(link => {
@@ -1188,7 +1225,9 @@ class App145FC {
         
         document.getElementById("dash-match-time").innerText = activeMatch.time;
         document.getElementById("dash-match-location").innerText = activeMatch.location;
-        document.getElementById("dash-match-jersey").innerText = activeMatch.jersey || "Padrão";
+        document.getElementById("dash-match-jersey").innerText = activeMatch.jersey || "Preto/Verde";
+
+        this.updateMatchCountdown();
 
         // Métricas de RSVP
         let yes = 0, maybe = 0, no = 0;
@@ -1834,7 +1873,81 @@ class App145FC {
         this.updateTimerDisplay(pos);
     }
 
-    renderTrainingSection() {
+    updateMatchCountdown() {
+        const countdownEl = document.getElementById("dash-countdown-text");
+        if (!countdownEl) return;
+
+        const match = this.matches.find(m => m.id === this.activeMatchId);
+        if (!match) {
+            countdownEl.innerText = "Nenhum jogo agendado no momento.";
+            return;
+        }
+
+        const matchDateTimeStr = `${match.date}T${match.time || '19:00'}:00`;
+        const matchTime = new Date(matchDateTimeStr).getTime();
+        const now = new Date().getTime();
+        const diff = matchTime - now;
+
+        if (isNaN(diff)) {
+            countdownEl.innerText = "Data do jogo a definir";
+            return;
+        }
+
+        if (diff <= 0) {
+            countdownEl.innerText = "⚡ É HOJE! Dia de jogo do 145FC!";
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        let text = "⏳ Próximo Jogo em: ";
+        if (days > 0) text += `${days}d `;
+        text += `${hours}h ${minutes}m`;
+
+        countdownEl.innerText = text;
+    }
+
+    renderNoticeBoard() {
+        const editBtn = document.getElementById("edit-notice-btn");
+        if (editBtn) {
+            editBtn.style.display = this.isAdminOrManager() ? "inline-flex" : "none";
+        }
+
+        const titleEl = document.getElementById("notice-title");
+        const textEl = document.getElementById("notice-text");
+
+        if (titleEl && this.noticeData) titleEl.innerText = this.noticeData.title || "Mural da Comissão Técnica";
+        if (textEl && this.noticeData) textEl.innerText = this.noticeData.text || "Nenhum aviso cadastrado.";
+    }
+
+    openNoticeModal() {
+        if (!this.isAdminOrManager()) {
+            this.showToast("Modo Visualização: Apenas a comissão técnica pode editar os recados.");
+            return;
+        }
+        document.getElementById("edit-notice-title-input").value = this.noticeData.title || "";
+        document.getElementById("edit-notice-text-input").value = this.noticeData.text || "";
+        document.getElementById("edit-notice-modal").classList.remove("hidden");
+    }
+
+    saveNotice() {
+        if (!this.isAdminOrManager()) {
+            this.showToast("Modo Visualização: Apenas a comissão técnica pode editar os recados.");
+            return;
+        }
+        const title = document.getElementById("edit-notice-title-input").value.trim();
+        const text = document.getElementById("edit-notice-text-input").value.trim();
+
+        this.noticeData = { title, text };
+        db.collection("shared").doc("notice").set({ data: this.noticeData })
+            .catch(err => console.error("Erro ao salvar aviso:", err));
+
+        document.getElementById("edit-notice-modal").classList.add("hidden");
+        this.renderNoticeBoard();
+        this.showToast("Recado da Comissão salvo com sucesso!");
+    }
         const editBtn = document.getElementById("open-edit-training-btn");
         if (editBtn) {
             editBtn.style.display = this.isAdminOrManager() ? "inline-flex" : "none";

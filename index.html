@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=4.0.0">
+    <link rel="stylesheet" href="styles.css?v=5.0.0">
 </head>
 <body>
     <!-- App Container -->
@@ -795,9 +795,18 @@
 
             <!-- SECTION 7: TACTICAL CHALKBOARD -->
             <section id="board" class="tab-content">
+                <div class="panel-tabs" style="margin-bottom: 1.25rem;">
+                    <button class="panel-tab-btn active" id="btn-board-official" onclick="app.setBoardMode('official')">
+                        <i class="fa-solid fa-clipboard-list"></i> Prancheta Oficial (Treinador)
+                    </button>
+                    <button class="panel-tab-btn" id="btn-board-free" onclick="app.setBoardMode('free')">
+                        <i class="fa-solid fa-palette"></i> Prancheta Livre (Rascunho Individual)
+                    </button>
+                </div>
+
                 <div class="section-header">
                     <div>
-                        <h1>Prancheta do Treinador</h1>
+                        <h1>Prancheta Tática</h1>
                         <p class="subtitle">Arraste os jogadores livremente e desenhe jogadas táticas na tela.</p>
                     </div>
                     <div class="header-actions">
@@ -823,15 +832,6 @@
                             <i class="fa-solid fa-rotate-left"></i> Resetar Posições
                         </button>
                     </div>
-                </div>
-
-                <div class="panel-tabs" style="margin-bottom: 1.5rem;">
-                    <button class="panel-tab-btn active" id="btn-board-official" onclick="app.setBoardMode('official')">
-                        <i class="fa-solid fa-clipboard-list"></i> Prancheta Oficial (Treinador)
-                    </button>
-                    <button class="panel-tab-btn" id="btn-board-free" onclick="app.setBoardMode('free')">
-                        <i class="fa-solid fa-palette"></i> Prancheta Livre (Rascunho Individual)
-                    </button>
                 </div>
 
                 <div class="chalkboard-layout-grid">
@@ -879,14 +879,14 @@
                         <h2>Como Usar a Prancheta</h2>
                         <p class="section-desc">Passe as instruções táticas de forma visual e intuitiva.</p>
                         <ul class="exercise-list">
-                            <li><strong>Movimentar Jogadores:</strong> Clique/toque e arraste os tokens de jogadores (Verdes = 145FC, Vermelhos = Adversário) para qualquer lugar.</li>
+                            <li><strong>Movimentar Jogadores:</strong> Clique/toque e arraste os tokens de jogadores (Azuis = 145FC, Vermelhos = Adversário) para qualquer lugar.</li>
                             <li><strong>Desenhar no Campo:</strong> Clique e arraste o dedo/mouse no gramado de fundo para fazer marcações táticas.</li>
-                            <li><strong>Gizes de Cores:</strong> Selecione as cores acima (verde, amarelo, laranja, vermelho, branco) para separar fases de jogo.</li>
+                            <li><strong>Gizes de Cores:</strong> Selecione as cores acima (azul, laranja, vermelho, branco) para separar fases de jogo.</li>
                             <li><strong>Exibir Oponentes:</strong> Ative/desative a exibição dos tokens vermelhos usando o botão "Oponentes".</li>
                         </ul>
                         <div class="tactical-tips">
                             <h3>💡 Dica do Treinador:</h3>
-                            <p>Configure a formação inicial e use os desenhos de cores diferentes para detalhar passes (verde), movimentações de corrida (amarelo) e posicionamento defensivo do adversário (vermelho).</p>
+                            <p>Configure a formação inicial e use os desenhos de cores diferentes para detalhar passes, movimentações de corrida e posicionamento defensivo do adversário.</p>
                         </div>
                     </div>
                 </div>
