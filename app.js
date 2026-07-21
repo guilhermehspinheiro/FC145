@@ -1953,7 +1953,7 @@ class App145FC {
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-        let text = "⏳ Próximo Jogo em: ";
+        let text = "Próximo Jogo em: ";
         if (days > 0) text += `${days}d `;
         text += `${hours}h ${minutes}m`;
 
