@@ -1629,38 +1629,39 @@ class App145FC {
     }
 
     handlePlayerPoolClick(playerId) {
+        // Se NÃO for da comissão técnica (atleta em modo leitura), expande a foto do jogador
         if (!this.isAdminOrManager()) {
-            this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar a escalação.");
+            this.expandPlayerById(playerId);
             return;
         }
 
-        if (this.selectedFieldPlayerIndex === null) {
-            this.showToast("Selecione primeiro uma camisa preta no campo de futebol acima para substituí-la.");
+        // Se for da comissão técnica e tiver uma posição no campo selecionada para substituição
+        if (this.selectedFieldPlayerIndex !== null) {
+            const lineup = this.getLineupForFormation(this.selectedFormation);
+            const alreadyInLineupIdx = lineup.indexOf(playerId);
+
+            // Se o jogador selecionado na lista já estiver em outra posição no campo
+            if (alreadyInLineupIdx !== -1) {
+                const currentPlayerAtPosition = lineup[this.selectedFieldPlayerIndex];
+                lineup[alreadyInLineupIdx] = currentPlayerAtPosition;
+                lineup[this.selectedFieldPlayerIndex] = playerId;
+                this.showToast("Jogadores trocaram de posições no campo.");
+            } else {
+                lineup[this.selectedFieldPlayerIndex] = playerId;
+                const player = this.players.find(p => p.id === playerId);
+                this.showToast(`${player.name} entrou na escalação.`);
+            }
+
+            this.saveLineupForFormation(this.selectedFormation, lineup);
+            this.selectedFieldPlayerIndex = null;
+            this.renderTacticalField();
+            this.renderAvailablePlayersList();
+            this.renderDashboardLineup();
             return;
         }
 
-        const lineup = this.getLineupForFormation(this.selectedFormation);
-        const alreadyInLineupIdx = lineup.indexOf(playerId);
-
-        // Se o jogador selecionado na lista já estiver em outra posição no campo
-        if (alreadyInLineupIdx !== -1) {
-            // Faz a troca simples de posições entre as duas camisas
-            const currentPlayerAtPosition = lineup[this.selectedFieldPlayerIndex];
-            lineup[alreadyInLineupIdx] = currentPlayerAtPosition;
-            lineup[this.selectedFieldPlayerIndex] = playerId;
-            this.showToast("Jogadores trocaram de posições no campo.");
-        } else {
-            // Substituição simples
-            lineup[this.selectedFieldPlayerIndex] = playerId;
-            const player = this.players.find(p => p.id === playerId);
-            this.showToast(`${player.name} entrou na escalação.`);
-        }
-
-        this.saveLineupForFormation(this.selectedFormation, lineup);
-        this.selectedFieldPlayerIndex = null;
-        this.renderTacticalField();
-        this.renderAvailablePlayersList();
-        this.renderDashboardLineup();
+        // Se for da comissão técnica mas NENHUMA posição do campo estiver selecionada, expande a foto do jogador
+        this.expandPlayerById(playerId);
     }
 
     addNewPlayer() {
