@@ -140,6 +140,9 @@
                                 <span>Uniforme: <strong id="dash-match-jersey">Preto/Verde</strong></span>
                             </div>
                         </div>
+                        <div class="match-countdown-box" id="dash-match-countdown" style="margin: 1rem 0; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color); text-align: center; font-size: 0.85rem; color: var(--accent-color); font-weight: 700;">
+                            <i class="fa-regular fa-hourglass-half"></i> <span id="dash-countdown-text">Calculando contagem regressiva...</span>
+                        </div>
                         <div class="rsvp-summary-bar">
                             <div class="rsvp-metric">
                                 <span class="num green" id="dash-rsvp-yes">0</span>
@@ -223,6 +226,22 @@
                                     <h4 id="dash-top-assister">Nenhuma assistência</h4>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Notice Board Card -->
+                    <div class="glass-card notice-board-card" style="grid-column: 1 / -1; margin-top: 0.5rem;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="category-tag" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.3);"><i class="fa-solid fa-bullhorn"></i> Mural da Comissão Técnica</span>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" id="edit-notice-btn" style="display: none;" onclick="app.openNoticeModal()">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar Recado
+                            </button>
+                        </div>
+                        <div class="notice-content" style="padding: 0.75rem 0;">
+                            <h3 id="notice-title" style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.35rem;">Avisos & Orientações do Treinador</h3>
+                            <p id="notice-text" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">Nenhum aviso no momento. Bom jogo a todos!</p>
                         </div>
                     </div>
                 </div>
@@ -874,19 +893,21 @@
                         </div>
                     </div>
 
-                    <!-- Blackboard side instructions -->
+                    <!-- Squad Selection List for Chalkboard -->
                     <div class="glass-card board-instructions-card">
-                        <h2>Como Usar a Prancheta</h2>
-                        <p class="section-desc">Passe as instruções táticas de forma visual e intuitiva.</p>
-                        <ul class="exercise-list">
-                            <li><strong>Movimentar Jogadores:</strong> Clique/toque e arraste os tokens de jogadores (Azuis = 145FC, Vermelhos = Adversário) para qualquer lugar.</li>
-                            <li><strong>Desenhar no Campo:</strong> Clique e arraste o dedo/mouse no gramado de fundo para fazer marcações táticas.</li>
-                            <li><strong>Gizes de Cores:</strong> Selecione as cores acima (azul, laranja, vermelho, branco) para separar fases de jogo.</li>
-                            <li><strong>Exibir Oponentes:</strong> Ative/desative a exibição dos tokens vermelhos usando o botão "Oponentes".</li>
-                        </ul>
-                        <div class="tactical-tips">
-                            <h3>💡 Dica do Treinador:</h3>
-                            <p>Configure a formação inicial e use os desenhos de cores diferentes para detalhar passes, movimentações de corrida e posicionamento defensivo do adversário.</p>
+                        <div class="card-header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <h3><i class="fa-solid fa-users"></i> Elenco do 145FC</h3>
+                            <span class="badge" style="font-size: 0.75rem; background: rgba(0, 85, 255, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Escalação na Prancheta</span>
+                        </div>
+                        <p class="section-desc" style="font-size: 0.8rem; margin-bottom: 0.75rem;">
+                            Selecione um token azul na prancheta e toque em um jogador abaixo para escalá-lo na posição.
+                        </p>
+                        <div class="search-box" style="margin-bottom: 0.75rem;">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="board-player-search" class="custom-input" placeholder="Buscar jogador no elenco..." style="padding-left: 2.25rem;">
+                        </div>
+                        <div class="available-players-pool" id="board-players-pool" style="max-height: 420px; overflow-y: auto;">
+                            <!-- Squad players dynamically injected -->
                         </div>
                     </div>
                 </div>
@@ -1063,6 +1084,13 @@
             <div class="login-footer">
                 <a href="#" id="toggle-register-link">Não tem conta? Cadastre-se aqui</a>
             </div>
+    <!-- PLAYER PHOTO LIGHTBOX MODAL -->
+    <div class="modal-overlay hidden" id="photo-lightbox-modal" style="z-index: 200000;" onclick="app.closePhotoLightbox()">
+        <div class="modal-card glass-card" style="max-width: 420px; width: 90%; text-align: center; padding: 1.5rem; position: relative;" onclick="event.stopPropagation()">
+            <button class="btn-close-modal" onclick="app.closePhotoLightbox()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <div id="lightbox-image-container" style="width: 100%; height: 320px; border-radius: 12px; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: rgba(0,0,0,0.6); margin: 1rem 0; border: 1px solid var(--border-color);"></div>
+            <h2 id="lightbox-player-name" style="font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.25rem;">Nome do Jogador</h2>
+            <p id="lightbox-player-info" style="font-size: 0.9rem; color: var(--accent-color); font-weight: 600;">#10 • Meio-Campo</p>
         </div>
     </div>
 
@@ -1071,6 +1099,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
-    <script src="app.js?v=6.0.0"></script>
+    <script src="app.js?v=7.0.0"></script>
 </body>
 </html>

@@ -147,6 +147,7 @@ class App145FC {
         this.boardPenSize = 4;
         this.boardMode = "official"; // "official" or "free"
         this.boardHistoryStack = [];
+        this.selectedBoardToken = null;
         this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
         this.noticeData = {
             title: "Avisos & Orientações do Treinador",
@@ -413,6 +414,11 @@ class App145FC {
             if (this.loggedInUser.photo) {
                 avatarEl.style.backgroundImage = `url(${this.loggedInUser.photo})`;
                 avatarEl.style.backgroundColor = "transparent";
+                avatarEl.style.cursor = "pointer";
+                avatarEl.onclick = (e) => {
+                    e.stopPropagation();
+                    this.expandPlayerPhoto(this.loggedInUser.username, this.loggedInUser.photo, '', 'Jogador');
+                };
             } else {
                 avatarEl.style.backgroundImage = "none";
                 avatarEl.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
@@ -730,7 +736,15 @@ class App145FC {
             });
         });
 
-        // Pesquisa de Jogadores no Painel
+        // Busca de Jogadores na Prancheta
+        const boardSearch = document.getElementById("board-player-search");
+        if (boardSearch) {
+            boardSearch.addEventListener("input", (e) => {
+                this.renderBoardPlayersList(e.target.value);
+            });
+        }
+
+        // Busca de Jogadores
         document.getElementById("player-search").addEventListener("input", (e) => {
             this.renderAvailablePlayersList(e.target.value);
         });
@@ -1114,6 +1128,7 @@ class App145FC {
         
         this.renderTacticalField();
         this.renderAvailablePlayersList();
+        this.renderBoardPlayersList();
         
         this.renderMatchesList();
         this.renderRsvpPanel();
@@ -1481,7 +1496,7 @@ class App145FC {
             });
 
             const badgeContent = player.photo 
-                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo})"></div>` 
+                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerPhoto('${player.name.replace(/'/g, "\\'")}', '${player.photo}', '${player.number}', '${player.position}')" title="Clique para expandir foto"></div>` 
                 : player.number;
 
             const removeBtnHtml = this.isAdminOrManager() ? `
@@ -1907,6 +1922,97 @@ class App145FC {
         text += `${hours}h ${minutes}m`;
 
         countdownEl.innerText = text;
+    }
+
+    renderBoardPlayersList(filterQuery = "") {
+        const pool = document.getElementById("board-players-pool");
+        if (!pool) return;
+        pool.innerHTML = "";
+
+        const query = filterQuery.toLowerCase().trim();
+
+        this.players.forEach(player => {
+            if (query && !player.name.toLowerCase().includes(query) && !player.position.toLowerCase().includes(query)) {
+                return;
+            }
+
+            const item = document.createElement("div");
+            item.className = "squad-player-item";
+
+            item.addEventListener("click", () => {
+                this.assignPlayerToBoardToken(player);
+            });
+
+            const badgeContent = player.photo 
+                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerPhoto('${player.name.replace(/'/g, "\\'")}', '${player.photo}', '${player.number}', '${player.position}')" title="Clique para expandir foto"></div>` 
+                : player.number;
+
+            item.innerHTML = `
+                <div class="squad-player-info">
+                    <div class="player-badge-num" style="${player.photo ? 'padding:0; background:none; border:none; display:flex; align-items:center; justify-content:center;' : ''}">${badgeContent}</div>
+                    <div>
+                        <div class="squad-player-name">${player.name}</div>
+                        <div class="squad-player-pos">${player.position} (#${player.number})</div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding: 0.25rem 0.5rem;" title="Escalar no token selecionado">
+                    <i class="fa-solid fa-user-plus"></i> Escalar
+                </button>
+            `;
+            pool.appendChild(item);
+        });
+    }
+
+    assignPlayerToBoardToken(player) {
+        if (!this.canEditBoard()) {
+            this.showToast("Alterne para a 'Prancheta Livre' para trocar jogadores na prancheta!");
+            return;
+        }
+
+        if (!this.selectedBoardToken) {
+            this.showToast("Toque primeiro em um token azul na prancheta para escolher a camisa!");
+            return;
+        }
+
+        const token = this.selectedBoardToken;
+        if (player.photo) {
+            token.style.backgroundImage = `url(${player.photo})`;
+            token.style.backgroundSize = "cover";
+            token.style.backgroundPosition = "center";
+            token.innerText = "";
+        } else {
+            token.style.backgroundImage = "none";
+            token.innerText = player.number;
+        }
+
+        token.setAttribute("data-player-name", player.name);
+        this.showToast(`${player.name} escalado na prancheta!`);
+
+        token.style.outline = "none";
+        this.selectedBoardToken = null;
+    }
+
+    expandPlayerPhoto(name, photoUrl, number, position) {
+        if (!photoUrl) {
+            this.showToast(`O jogador ${name || 'selecionado'} não possui foto cadastrada.`);
+            return;
+        }
+        const modal = document.getElementById("photo-lightbox-modal");
+        const imgContainer = document.getElementById("lightbox-image-container");
+        const nameEl = document.getElementById("lightbox-player-name");
+        const infoEl = document.getElementById("lightbox-player-info");
+
+        if (modal && imgContainer && nameEl && infoEl) {
+            imgContainer.style.backgroundImage = `url(${photoUrl})`;
+            nameEl.innerText = name || 'Jogador';
+            infoEl.innerText = `#${number || '?'} • ${position || 'Atleta'}`;
+            modal.classList.remove("hidden");
+        }
+    }
+
+    closePhotoLightbox() {
+        const modal = document.getElementById("photo-lightbox-modal");
+        if (modal) modal.classList.add("hidden");
     }
 
     renderNoticeBoard() {
@@ -2490,6 +2596,19 @@ class App145FC {
             }
 
             this.makeTokenDraggable(token, pitch);
+
+            token.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (this.selectedBoardToken && this.selectedBoardToken !== token) {
+                    this.selectedBoardToken.style.outline = "none";
+                }
+                this.selectedBoardToken = token;
+                token.style.outline = "2px solid #38bdf8";
+                token.style.outlineOffset = "2px";
+                const currentName = token.getAttribute("data-player-name") || (player ? player.name : pos.role);
+                this.showToast(`Token selecionado (${currentName}). Clique no jogador do elenco ao lado para escalar.`);
+            });
+
             homeLayer.appendChild(token);
         });
 
