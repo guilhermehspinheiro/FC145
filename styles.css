@@ -1675,11 +1675,17 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    transform: translateY(150%);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
 }
 
 .toast-notification.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
     transform: translateY(0);
 }
 
@@ -2216,7 +2222,7 @@ body {
         bottom: auto;
         font-size: 0.85rem;
         padding: 0.85rem 1rem;
-        transform: translateY(-150%);
+        transform: translateY(-20px);
     }
 
     /* RSVP assigner buttons */
