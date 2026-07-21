@@ -204,37 +204,103 @@ class App145FC {
         }
     }
 
-    async init() {
-        // Verifica Autenticação síncrona de imediato para evitar piscada da tela de login
-        this.checkAuth();
+    loadLocalCache() {
+        try {
+            const p = localStorage.getItem("145fc_cache_players");
+            const m = localStorage.getItem("145fc_cache_matches");
+            const s = localStorage.getItem("145fc_cache_stats");
+            const f = localStorage.getItem("145fc_cache_formation");
+            const u = localStorage.getItem("145fc_cache_users");
+            const t = localStorage.getItem("145fc_cache_training");
+            const n = localStorage.getItem("145fc_cache_notice");
 
-        this.isDataLoaded = false;
-        // Carrega dados do Firestore (ou defaults se for a primeira vez)
-        await this.loadDataFromFirestore();
-        this.isDataLoaded = true;
-        
-        // Atualiza verificação pós-Firestore
-        this.checkAuth();
-        
-        // Define o primeiro jogo como ativo por padrão
-        if (this.matches.length > 0) {
+            if (p) this.players = JSON.parse(p);
+            if (m) this.matches = JSON.parse(m);
+            if (s) this.stats = JSON.parse(s);
+            if (f) {
+                const parsedF = JSON.parse(f);
+                if (parsedF.selected && FORMATIONS[parsedF.selected]) {
+                    this.selectedFormation = parsedF.selected;
+                    const selectEl = document.getElementById("formation-select");
+                    if (selectEl) selectEl.value = parsedF.selected;
+                }
+                if (parsedF.lineups) this.firestoreLineups = parsedF.lineups;
+            }
+            if (u) this.users = JSON.parse(u);
+            if (t) this.trainingData = JSON.parse(t);
+            if (n) this.noticeData = JSON.parse(n);
+        } catch(e) {
+            console.warn("Aviso ao ler cache local:", e);
+        }
+    }
+
+    updateLocalCache() {
+        try {
+            if (this.players) localStorage.setItem("145fc_cache_players", JSON.stringify(this.players));
+            if (this.matches) localStorage.setItem("145fc_cache_matches", JSON.stringify(this.matches));
+            if (this.stats) localStorage.setItem("145fc_cache_stats", JSON.stringify(this.stats));
+            if (this.firestoreLineups) localStorage.setItem("145fc_cache_formation", JSON.stringify({ selected: this.selectedFormation, lineups: this.firestoreLineups }));
+            if (this.users) localStorage.setItem("145fc_cache_users", JSON.stringify(this.users));
+            if (this.trainingData) localStorage.setItem("145fc_cache_training", JSON.stringify(this.trainingData));
+            if (this.noticeData) localStorage.setItem("145fc_cache_notice", JSON.stringify(this.noticeData));
+        } catch(e) {
+            console.warn("Aviso ao salvar cache local:", e);
+        }
+    }
+
+    setupAppVisibilitySync() {
+        const reSync = () => {
+            console.log("📱 App voltou do segundo plano - re-sincronizando...");
+            this.checkAuth();
+            this.renderAll();
+        };
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") reSync();
+        });
+        window.addEventListener("pageshow", reSync);
+    }
+
+    async init() {
+        // 1. Registrar Event Listeners IMEDIATAMENTE para garantir resposta do menu em 0ms
+        this.registerEvents();
+
+        // 2. Carrega dados do cache local instantâneo (0ms)
+        this.loadLocalCache();
+
+        // 3. Define partida ativa padrão
+        if (this.matches && this.matches.length > 0) {
             this.activeMatchId = this.matches[0].id;
         }
 
-        // Registrar Event Listeners
-        this.registerEvents();
-
-        // Renderiza as telas
+        // 4. Renderiza tela com cache instantâneo de imediato
+        this.checkAuth();
         this.renderAll();
-        
-        // Inicializa as datas
         this.updateDateDisplay();
-
-        // Inicializa a Prancheta
         this.initChalkboard();
 
-        // Inicia escuta em tempo real do Firestore
+        // 5. Carrega dados do Firestore com limite de tempo (timeout de resiliência 3.5s)
+        this.isDataLoaded = false;
+        try {
+            await Promise.race([
+                this.loadDataFromFirestore(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore Timeout")), 3500))
+            ]);
+        } catch (e) {
+            console.warn("⚠️ Firestore demorou a responder, mantendo dados do cache local:", e);
+        }
+        this.isDataLoaded = true;
+
+        // 6. Atualiza telas com os dados mais recentes do servidor e ativa tempo real
+        if (this.matches && this.matches.length > 0 && !this.activeMatchId) {
+            this.activeMatchId = this.matches[0].id;
+        }
+        this.checkAuth();
+        this.renderAll();
         this.setupRealtimeListeners();
+
+        // 7. Ativa re-sincronização automática para retorno do segundo plano no iOS/Android
+        this.setupAppVisibilitySync();
     }
 
     // --- CARGA E PERSISTÊNCIA DE DADOS (FIREBASE FIRESTORE) ---
@@ -276,7 +342,8 @@ class App145FC {
                 const fData = formationDoc.data();
                 if (fData.selected && FORMATIONS[fData.selected]) {
                     this.selectedFormation = fData.selected;
-                    document.getElementById("formation-select").value = fData.selected;
+                    const selectEl = document.getElementById("formation-select");
+                    if (selectEl) selectEl.value = fData.selected;
                 }
                 this.firestoreLineups = fData.lineups || {};
             } else {
@@ -307,13 +374,16 @@ class App145FC {
                 this.noticeData = noticeDoc.data().data;
             }
 
-            console.log("✅ Dados carregados do Firebase Firestore");
+            // Atualiza cache local instantâneo
+            this.updateLocalCache();
+
+            console.log("✅ Dados carregados do Firebase Firestore e armazenados em cache local");
         } catch (error) {
-            console.error("❌ Erro ao carregar do Firestore, usando defaults:", error);
-            this.players = [...DEFAULT_PLAYERS];
-            this.matches = [...DEFAULT_MATCHES];
-            this.stats = [...DEFAULT_STATS];
-            this.firestoreLineups = {};
+            console.error("❌ Erro ao carregar do Firestore, usando defaults/cache:", error);
+            if (!this.players) this.players = [...DEFAULT_PLAYERS];
+            if (!this.matches) this.matches = [...DEFAULT_MATCHES];
+            if (!this.stats) this.stats = [...DEFAULT_STATS];
+            if (!this.firestoreLineups) this.firestoreLineups = {};
         }
     }
 
@@ -394,16 +464,19 @@ class App145FC {
     }
 
     savePlayers() {
+        this.updateLocalCache();
         db.collection("shared").doc("players").set({ data: this.players })
             .catch(err => console.error("Erro ao salvar players:", err));
     }
 
     saveUsers() {
+        this.updateLocalCache();
         db.collection("shared").doc("users").set({ data: this.users })
             .catch(err => console.error("Erro ao salvar users:", err));
     }
 
     saveTraining() {
+        this.updateLocalCache();
         db.collection("shared").doc("training").set({ data: this.trainingData })
             .catch(err => console.error("Erro ao salvar treinos:", err));
     }
@@ -753,16 +826,19 @@ class App145FC {
     }
 
     saveMatches() {
+        this.updateLocalCache();
         db.collection("shared").doc("matches").set({ data: this.matches })
             .catch(err => console.error("Erro ao salvar matches:", err));
     }
 
     saveStats() {
+        this.updateLocalCache();
         db.collection("shared").doc("stats").set({ data: this.stats })
             .catch(err => console.error("Erro ao salvar stats:", err));
     }
 
     saveFormation() {
+        this.updateLocalCache();
         db.collection("shared").doc("formation").set({
             selected: this.selectedFormation,
             lineups: this.firestoreLineups || {}
