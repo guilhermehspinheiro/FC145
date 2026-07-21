@@ -386,6 +386,7 @@ class App145FC {
     updateSidebarUserProfile() {
         const nameEl = document.getElementById("sidebar-user-name");
         const avatarEl = document.getElementById("sidebar-user-avatar");
+        const posEl = document.querySelector(".sidebar-user-info .subtitle");
         
         if (this.loggedInUser && nameEl && avatarEl) {
             nameEl.innerText = this.loggedInUser.username;
@@ -395,6 +396,14 @@ class App145FC {
             } else {
                 avatarEl.style.backgroundImage = "none";
                 avatarEl.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+            }
+
+            if (posEl) {
+                if (this.isAdminOrManager()) {
+                    posEl.innerHTML = `<span style="color: #22c55e; font-weight: 700;"><i class="fa-solid fa-shield-halved"></i> Comissão Técnica</span>`;
+                } else {
+                    posEl.innerHTML = `<span style="color: var(--text-muted);"><i class="fa-solid fa-user"></i> Atleta (Modo Leitura)</span>`;
+                }
             }
         }
     }
