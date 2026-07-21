@@ -145,6 +145,7 @@ class App145FC {
         this.boardOpponentsVisible = true;
         this.boardPenColor = "#0055ff";
         this.boardPenSize = 4;
+        this.boardMode = "official"; // "official" or "free"
         this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
     }
 
@@ -153,6 +154,28 @@ class App145FC {
         const managers = ["admin", "guilherme pinheiro", "eduardo"];
         const username = (this.loggedInUser.username || "").trim().toLowerCase();
         return managers.includes(username);
+    }
+
+    canEditBoard() {
+        return this.boardMode === "free" || this.isAdminOrManager();
+    }
+
+    setBoardMode(mode) {
+        this.boardMode = mode;
+        const btnOfficial = document.getElementById("btn-board-official");
+        const btnFree = document.getElementById("btn-board-free");
+        
+        if (btnOfficial && btnFree) {
+            if (mode === "official") {
+                btnOfficial.classList.add("active");
+                btnFree.classList.remove("active");
+                this.showToast("Exibindo Prancheta Oficial do Treinador.");
+            } else {
+                btnOfficial.classList.remove("active");
+                btnFree.classList.add("active");
+                this.showToast("Prancheta Livre ativada! Você pode mover e desenhar à vontade.");
+            }
+        }
     }
 
     async init() {
@@ -646,7 +669,7 @@ class App145FC {
         // Formação do Campo
         document.getElementById("formation-select").addEventListener("change", (e) => {
             if (!this.isAdminOrManager()) {
-                this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode alterar o esquema tático.");
+                this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar o esquema tático.");
                 e.target.value = this.selectedFormation;
                 return;
             }
@@ -919,8 +942,8 @@ class App145FC {
         const boardFormSelect = document.getElementById("board-formation-select");
         if (boardFormSelect) {
             boardFormSelect.addEventListener("change", (e) => {
-                if (!this.isAdminOrManager()) {
-                    this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar o esquema da prancheta.");
+                if (!this.canEditBoard()) {
+                    this.showToast("Alterne para a 'Prancheta Livre' para trocar o esquema tático!");
                     e.target.value = this.selectedFormation;
                     return;
                 }
@@ -933,8 +956,8 @@ class App145FC {
         const toggleOppsBtn = document.getElementById("toggle-opponents-btn");
         if (toggleOppsBtn) {
             toggleOppsBtn.addEventListener("click", () => {
-                if (!this.isAdminOrManager()) {
-                    this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar opções da prancheta.");
+                if (!this.canEditBoard()) {
+                    this.showToast("Alterne para a 'Prancheta Livre' para alterar a exibição de oponentes!");
                     return;
                 }
                 this.boardOpponentsVisible = !this.boardOpponentsVisible;
@@ -950,8 +973,8 @@ class App145FC {
         const clearBoardBtn = document.getElementById("clear-board-drawings-btn");
         if (clearBoardBtn) {
             clearBoardBtn.addEventListener("click", () => {
-                if (!this.isAdminOrManager()) {
-                    this.showToast("Modo Visualização: Apenas a comissão técnica pode limpar a prancheta.");
+                if (!this.canEditBoard()) {
+                    this.showToast("Alterne para a 'Prancheta Livre' para limpar os desenhos!");
                     return;
                 }
                 this.clearBoardDrawings();
@@ -963,8 +986,8 @@ class App145FC {
         const resetBoardBtn = document.getElementById("reset-board-players-btn");
         if (resetBoardBtn) {
             resetBoardBtn.addEventListener("click", () => {
-                if (!this.isAdminOrManager()) {
-                    this.showToast("Modo Visualização: Apenas a comissão técnica pode resetar a prancheta.");
+                if (!this.canEditBoard()) {
+                    this.showToast("Alterne para a 'Prancheta Livre' para resetar posições!");
                     return;
                 }
                 const form = document.getElementById("board-formation-select").value;
@@ -1348,7 +1371,7 @@ class App145FC {
 
     selectFieldPlayer(index) {
         if (!this.isAdminOrManager()) {
-            this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode alterar a escalação.");
+            this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar a escalação.");
             return;
         }
         if (this.selectedFieldPlayerIndex === index) {
@@ -1422,7 +1445,7 @@ class App145FC {
 
     handlePlayerPoolClick(playerId) {
         if (!this.isAdminOrManager()) {
-            this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode alterar a escalação.");
+            this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar a escalação.");
             return;
         }
 
@@ -2178,8 +2201,8 @@ class App145FC {
 
         // Eventos de Desenho no Canvas (Mouse & Toque)
         const onStartDraw = (e) => {
-            if (!this.isAdminOrManager()) {
-                this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode desenhar na prancheta.");
+            if (!this.canEditBoard()) {
+                this.showToast("Mude para a 'Prancheta Livre' para desenhar e testar táticas!");
                 return;
             }
             const coords = this.getCanvasCoords(e, canvas);
@@ -2324,8 +2347,8 @@ class App145FC {
         let startLeft = 0, startTop = 0;
 
         const dragStart = (e) => {
-            if (!this.isAdminOrManager()) {
-                this.showToast("Modo Visualização: Apenas a comissão técnica (Guilherme Pinheiro ou Eduardo) pode mover os jogadores na prancheta.");
+            if (!this.canEditBoard()) {
+                this.showToast("Mude para a 'Prancheta Livre' para mover os jogadores!");
                 return;
             }
             // Evita que o canvas desenhe ao arrastar o jogador
