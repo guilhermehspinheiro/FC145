@@ -403,15 +403,39 @@ class App145FC {
             .catch(err => console.error("Erro ao salvar treinos:", err));
     }
 
+    getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+        return null;
+    }
+
+    setCookie(name, value, days = 365) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
+    }
+
+    eraseCookie(name) {
+        document.cookie = `${name}=; Max-Age=-99999999; path=/;`;
+    }
+
     checkAuth() {
         this.closePhotoLightbox();
         const userLocal = localStorage.getItem("145fc_logged_in_user");
         const userSession = sessionStorage.getItem("145fc_logged_in_user");
-        const userStr = userLocal || userSession;
+        const userCookie = this.getCookie("145fc_logged_in_user");
+        const userStr = userLocal || userSession || userCookie;
 
         if (userStr) {
             try {
                 this.loggedInUser = JSON.parse(userStr);
+                // Sincroniza todas as camadas de armazenamento para garantir persistência
+                localStorage.setItem("145fc_logged_in_user", userStr);
+                localStorage.setItem("145fc_saved_username", this.loggedInUser.username);
+                this.setCookie("145fc_logged_in_user", userStr, 365);
+
                 document.documentElement.classList.add("pre-logged-in");
                 document.getElementById("login-container").classList.add("hidden");
                 document.querySelector(".app-container").classList.remove("hidden");
@@ -595,17 +619,10 @@ class App145FC {
         });
 
         if (found) {
-            const rememberMeInput = document.getElementById("login-remember-me");
-            const shouldRemember = rememberMeInput ? rememberMeInput.checked : true;
-
-            if (shouldRemember) {
-                localStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
-                localStorage.setItem("145fc_saved_username", found.username);
-                sessionStorage.removeItem("145fc_logged_in_user");
-            } else {
-                sessionStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
-                localStorage.removeItem("145fc_logged_in_user");
-            }
+            const userJson = JSON.stringify(found);
+            localStorage.setItem("145fc_logged_in_user", userJson);
+            localStorage.setItem("145fc_saved_username", found.username);
+            this.setCookie("145fc_logged_in_user", userJson, 365);
 
             this.showToast(`Bem-vindo, ${found.username}!`);
             this.checkAuth();
@@ -670,6 +687,7 @@ class App145FC {
     logout() {
         localStorage.removeItem("145fc_logged_in_user");
         sessionStorage.removeItem("145fc_logged_in_user");
+        this.eraseCookie("145fc_logged_in_user");
         this.showToast("Você saiu da conta.");
         this.checkAuth();
     }
