@@ -1525,11 +1525,6 @@ class App145FC {
                 if (player.photo) {
                     jersey.classList.add("has-photo");
                     jersey.style.backgroundImage = `url(${player.photo})`;
-                    jersey.style.cursor = "pointer";
-                    jersey.onclick = (e) => {
-                        e.stopPropagation();
-                        this.expandPlayerById(player.id);
-                    };
                     jersey.innerText = "";
                 } else {
                     jersey.innerText = player.number;
@@ -1561,15 +1556,26 @@ class App145FC {
 
     selectFieldPlayer(index) {
         if (!this.isAdminOrManager()) {
-            this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar a escalação.");
+            const lineupPlayerIds = this.getLineupForFormation(this.selectedFormation);
+            const playerId = lineupPlayerIds[index];
+            if (playerId) {
+                this.expandPlayerById(playerId);
+            } else {
+                this.showToast("Modo Visualização: Apenas a comissão técnica pode alterar a escalação.");
+            }
             return;
         }
+
         if (this.selectedFieldPlayerIndex === index) {
             this.selectedFieldPlayerIndex = null;
         } else {
             this.selectedFieldPlayerIndex = index;
             const positions = FORMATIONS[this.selectedFormation];
-            this.showToast(`Selecione um jogador na barra lateral para colocar na posição de ${positions[index].role}.`);
+            const lineupPlayerIds = this.getLineupForFormation(this.selectedFormation);
+            const currentPlayerId = lineupPlayerIds[index];
+            const currentPlayer = this.players.find(p => p.id === currentPlayerId);
+            const name = currentPlayer ? currentPlayer.name : positions[index].role;
+            this.showToast(`Posição de [${name}] selecionada no campo! Clique num jogador da lista abaixo para trocar.`);
         }
         this.renderTacticalField();
     }
