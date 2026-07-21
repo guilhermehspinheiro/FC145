@@ -151,7 +151,7 @@ class App145FC {
         this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
         this.noticeData = {
             title: "Avisos & Orientações do Treinador",
-            text: "Chegar com 30 minutos de antecedência. Não esquecer a caneleira e a garrafa de água!"
+            text: "Foco e determinação no próximo confronto. Vamos em busca da vitória!"
         };
     }
 
@@ -417,7 +417,12 @@ class App145FC {
                 avatarEl.style.cursor = "pointer";
                 avatarEl.onclick = (e) => {
                     e.stopPropagation();
-                    this.expandPlayerPhoto(this.loggedInUser.username, this.loggedInUser.photo, '', 'Jogador');
+                    const player = this.getLoggedInPlayer();
+                    const name = this.loggedInUser.username;
+                    const photo = this.loggedInUser.photo;
+                    const num = player ? player.number : "";
+                    const pos = player ? player.position : "Jogador";
+                    this.expandPlayerPhoto(name, photo, num, pos);
                 };
             } else {
                 avatarEl.style.backgroundImage = "none";
@@ -1416,6 +1421,11 @@ class App145FC {
                 if (player.photo) {
                     jersey.classList.add("has-photo");
                     jersey.style.backgroundImage = `url(${player.photo})`;
+                    jersey.style.cursor = "pointer";
+                    jersey.onclick = (e) => {
+                        e.stopPropagation();
+                        this.expandPlayerById(player.id);
+                    };
                     jersey.innerText = "";
                 } else {
                     jersey.innerText = player.number;
@@ -1496,7 +1506,7 @@ class App145FC {
             });
 
             const badgeContent = player.photo 
-                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerPhoto('${player.name.replace(/'/g, "\\'")}', '${player.photo}', '${player.number}', '${player.position}')" title="Clique para expandir foto"></div>` 
+                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerById('${player.id}')" title="Clique para expandir foto"></div>` 
                 : player.number;
 
             const removeBtnHtml = this.isAdminOrManager() ? `
@@ -1944,7 +1954,7 @@ class App145FC {
             });
 
             const badgeContent = player.photo 
-                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerPhoto('${player.name.replace(/'/g, "\\'")}', '${player.photo}', '${player.number}', '${player.position}')" title="Clique para expandir foto"></div>` 
+                ? `<div class="user-avatar" style="width:28px; height:28px; border:1px solid var(--primary-color); background-image:url(${player.photo}); cursor:pointer;" onclick="event.stopPropagation(); app.expandPlayerById('${player.id}')" title="Clique para expandir foto"></div>` 
                 : player.number;
 
             item.innerHTML = `
@@ -1990,6 +2000,16 @@ class App145FC {
 
         token.style.outline = "none";
         this.selectedBoardToken = null;
+    }
+
+    expandPlayerById(playerId) {
+        const player = this.players.find(p => p.id === playerId);
+        if (!player) return;
+        if (!player.photo) {
+            this.showToast(`O jogador ${player.name} não possui foto cadastrada no perfil.`);
+            return;
+        }
+        this.expandPlayerPhoto(player.name, player.photo, player.number, player.position);
     }
 
     expandPlayerPhoto(name, photoUrl, number, position) {

@@ -231,17 +231,17 @@
 
                     <!-- Notice Board Card -->
                     <div class="glass-card notice-board-card" style="grid-column: 1 / -1; margin-top: 0.5rem;">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <span class="category-tag" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.3);"><i class="fa-solid fa-bullhorn"></i> Mural da Comissão Técnica</span>
                             </div>
-                            <button class="btn btn-secondary btn-sm" id="edit-notice-btn" style="display: none;" onclick="app.openNoticeModal()">
+                            <button class="btn btn-primary btn-sm" id="edit-notice-btn" style="display: inline-flex; gap: 0.35rem; align-items: center;" onclick="app.openNoticeModal()">
                                 <i class="fa-solid fa-pen-to-square"></i> Editar Recado
                             </button>
                         </div>
-                        <div class="notice-content" style="padding: 0.75rem 0;">
+                        <div class="notice-content" style="padding: 0.25rem 0; cursor: pointer;" onclick="if(app.isAdminOrManager()) app.openNoticeModal()">
                             <h3 id="notice-title" style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.35rem;">Avisos & Orientações do Treinador</h3>
-                            <p id="notice-text" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">Nenhum aviso no momento. Bom jogo a todos!</p>
+                            <p id="notice-text" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">Foco e determinação no próximo confronto. Vamos em busca da vitória!</p>
                         </div>
                     </div>
                 </div>
@@ -1099,6 +1099,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
-    <script src="app.js?v=7.0.0"></script>
+    <script src="app.js?v=8.0.0"></script>
 </body>
 </html>
