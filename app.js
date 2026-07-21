@@ -180,10 +180,21 @@ class App145FC {
                 this.boardHistoryStack = [];
                 this.clearBoardDrawings();
                 this.resetBoardPlayers(this.selectedFormation);
+
+                // Desativa o lápis de desenho no modo oficial
+                this.isBoardPenActive = false;
+                const btnPen = document.getElementById("toggle-board-pen-btn");
+                const labelPen = document.getElementById("pen-btn-label");
+                const statusText = document.getElementById("board-mode-status-text");
+                const canvas = document.getElementById("chalkboard-canvas");
+                if (btnPen) btnPen.classList.remove("active-pen");
+                if (labelPen) labelPen.innerText = "Riscar (DESATIVADO)";
+                if (statusText) statusText.innerText = "Somente Movimento";
+                if (canvas) canvas.style.pointerEvents = "none";
             } else {
                 btnOfficial.classList.remove("active");
                 btnFree.classList.add("active");
-                if (notify) this.showToast("Prancheta Livre ativada! Você pode mover e desenhar à vontade.");
+                if (notify) this.showToast("Prancheta Livre ativada! Ative o botão do 'Riscar' para desenhar.");
             }
         }
     }
@@ -2585,11 +2596,17 @@ class App145FC {
         const canvas = document.getElementById("chalkboard-canvas");
         if (!canvas) return;
 
+        // Lápis desativado por padrão para evitar riscos acidentais ao clicar na tela
+        this.isBoardPenActive = false;
+        canvas.style.pointerEvents = "none";
+
         // Inicia Contexto de Desenho
         this.boardContext = canvas.getContext("2d");
 
         // Eventos de Desenho no Canvas (Mouse & Toque)
         const onStartDraw = (e) => {
+            if (!this.isBoardPenActive) return;
+
             if (!this.canEditBoard()) {
                 this.showToast("Mude para a 'Prancheta Livre' para desenhar e testar táticas!");
                 return;
@@ -2685,6 +2702,33 @@ class App145FC {
         if (this.boardHistoryStack.length >= 25) this.boardHistoryStack.shift();
         this.boardHistoryStack.push(this.boardContext.getImageData(0, 0, canvas.width, canvas.height));
         this.boardContext.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    toggleBoardPen() {
+        if (!this.canEditBoard()) {
+            this.showToast("Alterne para a 'Prancheta Livre' para ativar o lápis de desenho!");
+            return;
+        }
+
+        this.isBoardPenActive = !this.isBoardPenActive;
+        const btn = document.getElementById("toggle-board-pen-btn");
+        const label = document.getElementById("pen-btn-label");
+        const statusText = document.getElementById("board-mode-status-text");
+        const canvas = document.getElementById("chalkboard-canvas");
+
+        if (this.isBoardPenActive) {
+            if (btn) btn.classList.add("active-pen");
+            if (label) label.innerText = "Riscar (ATIVADO)";
+            if (statusText) statusText.innerText = "Desenho + Movimento";
+            if (canvas) canvas.style.pointerEvents = "auto";
+            this.showToast("Modo Desenho Ativado ✏️ - Agora você pode riscar o campo!");
+        } else {
+            if (btn) btn.classList.remove("active-pen");
+            if (label) label.innerText = "Riscar (DESATIVADO)";
+            if (statusText) statusText.innerText = "Somente Movimento";
+            if (canvas) canvas.style.pointerEvents = "none";
+            this.showToast("Modo Desenho Desativado 🚫 - Mova ou selecione os jogadores sem riscar.");
+        }
     }
 
     undoBoardDrawing() {

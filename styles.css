@@ -1748,6 +1748,33 @@ body {
     flex-wrap: wrap;
 }
 
+.btn-pen-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.btn-pen-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-pen-toggle.active-pen {
+    background: linear-gradient(135deg, #0055ff 0%, #0044cc 100%) !important;
+    color: #fff !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 12px rgba(0, 85, 255, 0.5) !important;
+}
+
 .color-palette {
     display: flex;
     gap: 0.6rem;

@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=18.0.0">
+    <link rel="stylesheet" href="styles.css?v=20.0.0">
     <script>
         if (localStorage.getItem("145fc_logged_in_user")) {
             document.documentElement.classList.add("pre-logged-in");
@@ -870,6 +870,9 @@
                     <!-- The Interactive Board Canvas & Pitch -->
                     <div class="glass-card chalkboard-card">
                         <div class="chalkboard-controls-bar">
+                            <button class="btn-pen-toggle" id="toggle-board-pen-btn" onclick="app.toggleBoardPen()" title="Clique para ativar/desativar o lápis de desenho">
+                                <i class="fa-solid fa-pencil"></i> <span id="pen-btn-label">Riscar (DESATIVADO)</span>
+                            </button>
                             <div class="color-palette">
                                 <span class="color-swatch active" data-color="#0055ff" style="background-color: #0055ff;" title="Azul Royal"></span>
                                 <span class="color-swatch" data-color="#38bdf8" style="background-color: #38bdf8;" title="Azul Celeste"></span>
@@ -882,7 +885,9 @@
                                 <input type="range" id="board-pen-size" min="2" max="10" value="4" class="custom-range">
                             </div>
                             <div class="board-mode-status">
-                                <span class="badge" id="board-action-mode"><i class="fa-solid fa-pencil"></i> Desenho + Movimento</span>
+                                <span class="badge" id="board-action-mode" style="cursor: pointer;" onclick="app.toggleBoardPen()">
+                                    <i class="fa-solid fa-pencil"></i> <span id="board-mode-status-text">Somente Movimento</span>
+                                </span>
                             </div>
                         </div>
 
@@ -1141,6 +1146,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
-    <script src="app.js?v=19.0.0"></script>
+    <script src="app.js?v=20.0.0"></script>
 </body>
 </html>
