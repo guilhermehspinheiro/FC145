@@ -97,8 +97,10 @@ class App145FC {
     }
 
     async init() {
+        this.isDataLoaded = false;
         // Carrega dados do Firestore (ou defaults se for a primeira vez)
         await this.loadDataFromFirestore();
+        this.isDataLoaded = true;
         
         // Verifica Autenticação (sessão local)
         this.checkAuth();
@@ -382,8 +384,25 @@ class App145FC {
         }
     }
 
-    login(username, password) {
-        const found = this.users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+    async login(username, password) {
+        if (!this.isDataLoaded) {
+            await this.loadDataFromFirestore();
+            this.isDataLoaded = true;
+        }
+
+        const cleanUser = (username || "").trim().toLowerCase();
+        const cleanPass = (password || "").trim();
+
+        if (!cleanUser || !cleanPass) {
+            this.showToast("Erro: Preencha o usuário e a senha.");
+            return;
+        }
+
+        const found = this.users.find(u => 
+            (u.username || "").trim().toLowerCase() === cleanUser && 
+            (u.password || "").trim() === cleanPass
+        );
+
         if (found) {
             localStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
             this.showToast(`Bem-vindo, ${found.username}!`);
@@ -394,8 +413,21 @@ class App145FC {
         }
     }
 
-    register(username, password, number, position, photoData) {
-        if (this.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+    async register(username, password, number, position, photoData) {
+        if (!this.isDataLoaded) {
+            await this.loadDataFromFirestore();
+            this.isDataLoaded = true;
+        }
+
+        const cleanUser = (username || "").trim();
+        const cleanPass = (password || "").trim();
+
+        if (!cleanUser || !cleanPass) {
+            this.showToast("Erro: Preencha o usuário e a senha.");
+            return;
+        }
+
+        if (this.users.some(u => (u.username || "").trim().toLowerCase() === cleanUser.toLowerCase())) {
             this.showToast("Erro: Nome de usuário já está cadastrado.");
             return;
         }
@@ -573,6 +605,11 @@ class App145FC {
         if (loginForm) {
             loginForm.addEventListener("submit", (e) => {
                 e.preventDefault();
+                // Fecha o teclado virtual do celular para visualizar mensagens na tela
+                if (document.activeElement && document.activeElement.blur) {
+                    document.activeElement.blur();
+                }
+
                 const usernameInput = document.getElementById("login-username");
                 const passwordInput = document.getElementById("login-password");
                 const numberInput = document.getElementById("register-number");

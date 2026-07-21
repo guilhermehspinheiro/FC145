@@ -2208,13 +2208,15 @@ body {
         grid-template-columns: 1fr;
     }
 
-    /* Toast notification: full width at bottom */
+    /* Toast notification: full width at top for mobile (avoids soft keyboard occlusion) */
     .toast-notification {
         left: 1rem;
         right: 1rem;
-        bottom: 1rem;
+        top: 1.25rem;
+        bottom: auto;
         font-size: 0.85rem;
         padding: 0.85rem 1rem;
+        transform: translateY(-150%);
     }
 
     /* RSVP assigner buttons */
