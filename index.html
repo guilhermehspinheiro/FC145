@@ -10,9 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=20.0.0">
+    <link rel="stylesheet" href="styles.css?v=21.0.0">
     <script>
-        if (localStorage.getItem("145fc_logged_in_user")) {
+        if (localStorage.getItem("145fc_logged_in_user") || sessionStorage.getItem("145fc_logged_in_user")) {
             document.documentElement.classList.add("pre-logged-in");
         }
     </script>
@@ -1106,6 +1106,13 @@
                     <label for="login-password">Senha</label>
                     <input type="password" id="login-password" required placeholder="Digite sua senha">
                 </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.6rem; margin: 0.75rem 0; cursor: pointer;">
+                    <input type="checkbox" id="login-remember-me" checked style="width: 18px; height: 18px; accent-color: var(--primary-color); cursor: pointer;">
+                    <label for="login-remember-me" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer; user-select: none; margin: 0; font-weight: 500;">
+                        Salvar login neste dispositivo
+                    </label>
+                </div>
                 
                 <!-- Registration-only fields -->
                 <div id="register-only-fields" class="hidden">
@@ -1146,6 +1153,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
-    <script src="app.js?v=20.0.0"></script>
+    <script src="app.js?v=21.0.0"></script>
 </body>
 </html>

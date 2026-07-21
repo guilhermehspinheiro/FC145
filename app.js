@@ -405,19 +405,33 @@ class App145FC {
 
     checkAuth() {
         this.closePhotoLightbox();
-        const user = localStorage.getItem("145fc_logged_in_user");
-        if (user) {
-            this.loggedInUser = JSON.parse(user);
-            document.documentElement.classList.add("pre-logged-in");
-            document.getElementById("login-container").classList.add("hidden");
-            document.querySelector(".app-container").classList.remove("hidden");
-            this.updateSidebarUserProfile();
+        const userLocal = localStorage.getItem("145fc_logged_in_user");
+        const userSession = sessionStorage.getItem("145fc_logged_in_user");
+        const userStr = userLocal || userSession;
+
+        if (userStr) {
+            try {
+                this.loggedInUser = JSON.parse(userStr);
+                document.documentElement.classList.add("pre-logged-in");
+                document.getElementById("login-container").classList.add("hidden");
+                document.querySelector(".app-container").classList.remove("hidden");
+                this.updateSidebarUserProfile();
+            } catch(e) {
+                this.loggedInUser = null;
+            }
         } else {
             this.loggedInUser = null;
             document.documentElement.classList.remove("pre-logged-in");
             document.getElementById("login-container").classList.remove("hidden");
             document.querySelector(".app-container").classList.add("hidden");
             this.toggleLoginRegister("login");
+
+            // Preenche o campo de usuário salvo anteriormente se houver
+            const savedUser = localStorage.getItem("145fc_saved_username");
+            const userInput = document.getElementById("login-username");
+            if (savedUser && userInput && !userInput.value) {
+                userInput.value = savedUser;
+            }
         }
     }
 
@@ -581,7 +595,18 @@ class App145FC {
         });
 
         if (found) {
-            localStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
+            const rememberMeInput = document.getElementById("login-remember-me");
+            const shouldRemember = rememberMeInput ? rememberMeInput.checked : true;
+
+            if (shouldRemember) {
+                localStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
+                localStorage.setItem("145fc_saved_username", found.username);
+                sessionStorage.removeItem("145fc_logged_in_user");
+            } else {
+                sessionStorage.setItem("145fc_logged_in_user", JSON.stringify(found));
+                localStorage.removeItem("145fc_logged_in_user");
+            }
+
             this.showToast(`Bem-vindo, ${found.username}!`);
             this.checkAuth();
             this.renderAll();
@@ -644,6 +669,7 @@ class App145FC {
 
     logout() {
         localStorage.removeItem("145fc_logged_in_user");
+        sessionStorage.removeItem("145fc_logged_in_user");
         this.showToast("Você saiu da conta.");
         this.checkAuth();
     }
