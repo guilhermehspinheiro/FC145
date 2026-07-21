@@ -1948,6 +1948,8 @@ class App145FC {
         this.renderNoticeBoard();
         this.showToast("Recado da Comissão salvo com sucesso!");
     }
+
+    renderTrainingSection() {
         const editBtn = document.getElementById("open-edit-training-btn");
         if (editBtn) {
             editBtn.style.display = this.isAdminOrManager() ? "inline-flex" : "none";
