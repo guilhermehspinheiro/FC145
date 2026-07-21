@@ -146,6 +146,7 @@ class App145FC {
         this.boardPenColor = "#0055ff";
         this.boardPenSize = 4;
         this.boardMode = "official"; // "official" or "free"
+        this.boardHistoryStack = [];
         this.trainingData = JSON.parse(JSON.stringify(DEFAULT_TRAINING));
     }
 
@@ -171,6 +172,7 @@ class App145FC {
                 btnFree.classList.remove("active");
                 this.showToast("Exibindo Prancheta Oficial do Treinador.");
                 // Limpa os desenhos e reseta as posições para o esquema oficial
+                this.boardHistoryStack = [];
                 this.clearBoardDrawings();
                 this.resetBoardPlayers(this.selectedFormation);
             } else {
@@ -978,6 +980,14 @@ class App145FC {
                     ? `<i class="fa-solid fa-eye-slash"></i> Oponentes` 
                     : `<i class="fa-solid fa-eye"></i> Oponentes`;
                 this.showToast(this.boardOpponentsVisible ? "Tokens adversários exibidos." : "Tokens adversários ocultados.");
+            });
+        }
+
+        // Desfazer traço
+        const undoBoardBtn = document.getElementById("undo-board-drawing-btn");
+        if (undoBoardBtn) {
+            undoBoardBtn.addEventListener("click", () => {
+                this.undoBoardDrawing();
             });
         }
 
@@ -2217,6 +2227,14 @@ class App145FC {
                 this.showToast("Mude para a 'Prancheta Livre' para desenhar e testar táticas!");
                 return;
             }
+
+            // Guarda estado do canvas no histórico antes de começar o novo traço
+            if (this.boardContext && canvas) {
+                if (!this.boardHistoryStack) this.boardHistoryStack = [];
+                if (this.boardHistoryStack.length >= 25) this.boardHistoryStack.shift();
+                this.boardHistoryStack.push(this.boardContext.getImageData(0, 0, canvas.width, canvas.height));
+            }
+
             const coords = this.getCanvasCoords(e, canvas);
             this.boardDrawing = true;
             this.boardContext.beginPath();
@@ -2296,7 +2314,28 @@ class App145FC {
     clearBoardDrawings() {
         const canvas = document.getElementById("chalkboard-canvas");
         if (!canvas || !this.boardContext) return;
+        if (!this.boardHistoryStack) this.boardHistoryStack = [];
+        if (this.boardHistoryStack.length >= 25) this.boardHistoryStack.shift();
+        this.boardHistoryStack.push(this.boardContext.getImageData(0, 0, canvas.width, canvas.height));
         this.boardContext.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    undoBoardDrawing() {
+        if (!this.canEditBoard()) {
+            this.showToast("Alterne para a 'Prancheta Livre' para desfazer traços!");
+            return;
+        }
+        const canvas = document.getElementById("chalkboard-canvas");
+        if (!canvas || !this.boardContext) return;
+
+        if (!this.boardHistoryStack || this.boardHistoryStack.length === 0) {
+            this.showToast("Nenhum traço recente para desfazer.");
+            return;
+        }
+
+        const lastState = this.boardHistoryStack.pop();
+        this.boardContext.putImageData(lastState, 0, 0);
+        this.showToast("Último traço desfeito!");
     }
 
     resetBoardPlayers(formation) {
