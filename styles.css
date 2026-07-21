@@ -28,6 +28,13 @@
 }
 
 /* Reset & Base Styles */
+html.pre-logged-in #login-container {
+    display: none !important;
+}
+html.pre-logged-in .app-container {
+    display: flex !important;
+}
+
 * {
     margin: 0;
     padding: 0;

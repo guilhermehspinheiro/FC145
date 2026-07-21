@@ -189,12 +189,15 @@ class App145FC {
     }
 
     async init() {
+        // Verifica Autenticação síncrona de imediato para evitar piscada da tela de login
+        this.checkAuth();
+
         this.isDataLoaded = false;
         // Carrega dados do Firestore (ou defaults se for a primeira vez)
         await this.loadDataFromFirestore();
         this.isDataLoaded = true;
         
-        // Verifica Autenticação (sessão local)
+        // Atualiza verificação pós-Firestore
         this.checkAuth();
         
         // Define o primeiro jogo como ativo por padrão
@@ -394,11 +397,13 @@ class App145FC {
         const user = localStorage.getItem("145fc_logged_in_user");
         if (user) {
             this.loggedInUser = JSON.parse(user);
+            document.documentElement.classList.add("pre-logged-in");
             document.getElementById("login-container").classList.add("hidden");
             document.querySelector(".app-container").classList.remove("hidden");
             this.updateSidebarUserProfile();
         } else {
             this.loggedInUser = null;
+            document.documentElement.classList.remove("pre-logged-in");
             document.getElementById("login-container").classList.remove("hidden");
             document.querySelector(".app-container").classList.add("hidden");
             this.toggleLoginRegister("login");
