@@ -390,6 +390,7 @@ class App145FC {
     }
 
     checkAuth() {
+        this.closePhotoLightbox();
         const user = localStorage.getItem("145fc_logged_in_user");
         if (user) {
             this.loggedInUser = JSON.parse(user);
@@ -626,15 +627,15 @@ class App145FC {
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
                 
-                canvas.width = 120;
-                canvas.height = 120;
+                canvas.width = 600;
+                canvas.height = 600;
                 
                 const size = Math.min(img.width, img.height);
                 const x = (img.width - size) / 2;
                 const y = (img.height - size) / 2;
                 
-                ctx.drawImage(img, x, y, size, size, 0, 0, 120, 120);
-                callback(canvas.toDataURL("image/jpeg", 0.7));
+                ctx.drawImage(img, x, y, size, size, 0, 0, 600, 600);
+                callback(canvas.toDataURL("image/jpeg", 0.85));
             };
             img.src = e.target.result;
         };
@@ -2013,6 +2014,7 @@ class App145FC {
     }
 
     expandPlayerPhoto(name, photoUrl, number, position) {
+        if (!this.loggedInUser) return;
         if (!photoUrl) {
             this.showToast(`O jogador ${name || 'selecionado'} não possui foto cadastrada.`);
             return;
